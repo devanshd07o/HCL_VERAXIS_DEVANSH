@@ -116,13 +116,10 @@ export default function CommandBay({
         const data = await res.json();
         const enhanced = data.enhanced_query || value;
         onChange(enhanced);
-        onSend(enhanced, mode);
-      } else {
-        onSend(value, mode);
+        inputRef.current?.focus();
       }
     } catch (err) {
-      console.warn("Enhance failed, executing default send:", err);
-      onSend(value, mode);
+      console.warn("Enhance failed:", err);
     } finally {
       setIsEnhancing(false);
     }

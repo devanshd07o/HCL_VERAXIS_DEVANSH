@@ -22,6 +22,7 @@ if sys.platform.startswith("win"):
     except Exception:
         pass
 
+import re
 import json
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
@@ -360,31 +361,91 @@ async def enhance_query_endpoint(req: EnhanceRequest):
         from backend.router import get_groq_client
         client = get_groq_client()
         system_instruction = (
-            "You are an elite scientific research prompt engineer. Given a raw inquiry, "
-            "transform it into an authoritative, deeply structured, and precise academic research question "
-            "optimized for empirical preprint retrieval and scientific analysis. "
-            "Keep it under 2 clear, information-dense sentences. "
-            "Return ONLY the enhanced query text. No preamble, no quotes."
+            "You are a scientific research prompt engineer. Rephrase and expand the inquiry "
+            "into an authoritative, deeply structured scientific research inquiry of 1 to 2 complete sentences "
+            "with precise technical and domain terminology. End with a complete sentence. "
+            "Output ONLY the plain text question, without quotes or markdown bold."
         )
         response = client.chat.completions.create(
-            model=key_manager.fast_model,
+            model=key_manager.primary_model,
             messages=[
                 {"role": "system", "content": system_instruction},
                 {"role": "user", "content": raw_query}
             ],
             temperature=0.3,
-            max_tokens=150
+            max_tokens=300
         )
-        enhanced = response.choices[0].message.content.strip().strip('"\'')
+        raw_enhanced = response.choices[0].message.content or ""
+        # Sanitize unicode dashes, quotes, and markdown bold markers
+        cleaned = raw_enhanced.strip().strip('"\'').strip('*').strip()
+        cleaned = cleaned.replace('\u2011', '-').replace('\u2013', '-').replace('\u2014', '-')
+        cleaned = re.sub(r'^\*\*|\*\*$', '', cleaned).strip()
         return {
             "original": raw_query,
-            "enhanced_query": enhanced or raw_query
+            "enhanced_query": cleaned or raw_query
         }
-    except Exception:
+    except Exception as e:
         return {
             "original": raw_query,
             "enhanced_query": raw_query
         }
+
+
+class ThinkingStepsRequest(BaseModel):
+    query: str
+
+
+@app.post("/api/thinking-steps")
+async def get_thinking_steps(req: ThinkingStepsRequest):
+    """
+    Generates 6-8 real-time, topic-tailored CrewAI multi-agent research steps.
+    """
+    user_query = req.query.strip()
+    if not user_query:
+        user_query = "Scientific Research Directive"
+
+    fallback_steps = [
+        {"agent": "Lead Analyst", "step": f"Deconstructing inquiry into academic taxonomy: '{user_query[:50]}'"},
+        {"agent": "arXiv Engine", "step": "Querying arXiv REST gateway for peer-reviewed preprints and abstracts"},
+        {"agent": "Lead Analyst", "step": "Extracting empirical mechanisms, benchmark figures, and mathematical formulations"},
+        {"agent": "Forensic Auditor", "step": "Cross-verifying claims against replication trials & methodology boundaries"},
+        {"agent": "Forensic Auditor", "step": "Auditing unit economics, commercial viability, and technology readiness levels"},
+        {"agent": "Dossier Director", "step": "Structuring multi-perspective consensus matrix & LaTeX tabular formatting"},
+        {"agent": "ReportLab Engine", "step": "Compiling vector typography and generating institutional publication PDF"},
+    ]
+
+    try:
+        from backend.router import get_groq_client
+        client = get_groq_client()
+        system_prompt = (
+            "You are the CrewAI Workflow Orchestrator for VERAXIS AI. "
+            "Given a user query, output EXACTLY 7 concise, highly specific multi-agent steps "
+            "tailored to this exact subject. "
+            "Available Agents: 'Lead Analyst', 'arXiv Engine', 'Forensic Auditor', 'Dossier Director', 'ReportLab Engine'. "
+            "Format MUST be pure valid JSON array of objects: [{\"agent\": \"...\", \"step\": \"...\"}]. "
+            "No markdown, no backticks, no filler."
+        )
+        res = client.chat.completions.create(
+            model=key_manager.fast_model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Query: {user_query}"}
+            ],
+            temperature=0.2,
+            max_tokens=450
+        )
+        raw_text = res.choices[0].message.content.strip()
+        if raw_text.startswith("```"):
+            raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+            raw_text = re.sub(r"\s*```$", "", raw_text)
+        steps = json.loads(raw_text)
+        if isinstance(steps, list) and len(steps) >= 4:
+            return {"steps": steps[:8]}
+    except Exception as e:
+        pass
+
+    return {"steps": fallback_steps}
+
 
 
 # ============================================================================
@@ -414,28 +475,49 @@ async def chat_endpoint(req: ChatRequest):
         intent = intent_data.get("intent", "GENERAL_CHAT")
         extracted_topic = intent_data.get("extracted_topic", user_query)
 
-    # Internal Query Rephrasing for Deep Research to ensure optimal multi-agent search coverage
+    # Internal Query Auto-Enhancement for Deep Research
+    enhanced_directive = user_query
     if intent == "DEEP_RESEARCH":
         try:
             from backend.router import get_groq_client
             client = get_groq_client()
+            if len(user_query.split()) < 15:
+                enh_res = client.chat.completions.create(
+                    model=key_manager.fast_model,
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": "You are an elite scientific research prompt engineer for multi-agent CrewAI synthesis. Transform the user's inquiry into an authoritative, information-dense research question with precise domain terminology. Return ONLY the enhanced query text in 1-2 dense sentences."
+                        },
+                        {"role": "user", "content": user_query}
+                    ],
+                    max_tokens=150,
+                    temperature=0.2
+                )
+                enhanced_cand = enh_res.choices[0].message.content.strip().strip('"\'')
+                if enhanced_cand and len(enhanced_cand) > len(user_query):
+                    enhanced_directive = enhanced_cand
+        except Exception:
+            pass
+
+        # Also extract search keywords for arXiv
+        try:
             rephrase_res = client.chat.completions.create(
                 model=key_manager.fast_model,
                 messages=[
                     {
                         "role": "system",
-                        "content": "Rephrase this scientific topic into a precise search keyword string for academic preprint databases. Output only 4 to 8 keywords separated by spaces."
+                        "content": "Extract 4 to 8 precise academic search keywords from this scientific topic for preprint databases. Output only space-separated keywords."
                     },
-                    {"role": "user", "content": extracted_topic}
+                    {"role": "user", "content": enhanced_directive}
                 ],
                 max_tokens=40,
                 temperature=0.2
             )
             expanded_keywords = rephrase_res.choices[0].message.content.strip()
-            if expanded_keywords:
-                extracted_topic = f"{extracted_topic} {expanded_keywords}"
+            extracted_topic = f"{user_query} {expanded_keywords}"
         except Exception:
-            pass
+            extracted_topic = user_query
 
     # BRANCH A: CASUAL / INSTANT CONVERSATIONAL QUERY
     if intent == "GENERAL_CHAT":
@@ -484,13 +566,14 @@ async def chat_endpoint(req: ChatRequest):
             "4. ## Commercial Scalability, Unit Economics & Market Feasibility\n"
             "5. ## Strategic Roadmaps & 2026-2030 Milestones\n"
             "6. ## Citations & Open Source Verification Indices\n\n"
+            "Format mathematical formulas cleanly using standard LaTeX delimiters: \\( ... \\) for inline math and \\[ ... \\] for block display math.\n"
             "Write with immense technical depth, hard metrics, concrete numbers, and analytical rigor. Zero fluff."
         )
 
         sources_context = "\n".join([f"- {s['title']} ({s['url']})" for s in sources])
 
         user_content = (
-            f"Execute exhaustive autonomous scientific research on the topic: '{extracted_topic}'.\n\n"
+            f"Execute exhaustive autonomous scientific research on the directive: '{enhanced_directive}'.\n\n"
             f"Identified Primary Academic Sources:\n{sources_context}\n\n"
             f"Synthesize the complete, authoritative, peer-reviewed caliber research dossier now."
         )
