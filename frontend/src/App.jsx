@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import NeuformCanvas from "./components/NeuformCanvas";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
+import RightInspector from "./components/RightInspector";
 import HeroCenter from "./components/HeroCenter";
 import ChatStream from "./components/ChatStream";
 import LiquidGlassInput from "./components/LiquidGlassInput";
@@ -61,8 +62,11 @@ export default function App() {
     localStorage.setItem("veraxis-chat-width", chatWidth);
   }, [chatWidth]);
 
-  // UI state
+  // Layout Panels state (Left & Right)
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [activeResearchData, setActiveResearchData] = useState(null);
+
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -97,6 +101,26 @@ export default function App() {
     fetchDynamicSuggestions();
   }, []);
 
+  // Keyboard Shortcuts (Ctrl+B, Ctrl+I, Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+        e.preventDefault();
+        setSidebarOpen((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "i") {
+        e.preventDefault();
+        setRightPanelOpen((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        handleNewSession();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // Sessions state
   const [sessions, setSessions] = useState(() => {
     try {
@@ -124,6 +148,7 @@ export default function App() {
     setCurrentSessionId(null);
     setMessages([]);
     setInputValue("");
+    setActiveResearchData(null);
     fetchDynamicSuggestions();
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
@@ -134,7 +159,15 @@ export default function App() {
     const sess = sessions.find((s) => s.id === id);
     if (!sess) return;
     setCurrentSessionId(id);
-    setMessages(sess.messages || []);
+    const msgs = sess.messages || [];
+    setMessages(msgs);
+    // Find latest research message in this session to populate Inspector
+    const latestResearch = [...msgs].reverse().find((m) => m.type === "research");
+    if (latestResearch) {
+      setActiveResearchData(latestResearch);
+    } else {
+      setActiveResearchData(null);
+    }
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
@@ -210,6 +243,14 @@ export default function App() {
       const finalMessages = [...updatedMessages, botMsg];
       setMessages(finalMessages);
 
+      // If deep research, wire data to Inspector and open on desktop
+      if (botMsg.type === "research") {
+        setActiveResearchData(botMsg);
+        if (window.innerWidth >= 1024) {
+          setRightPanelOpen(true);
+        }
+      }
+
       updatedSessions = updatedSessions.map((s) =>
         s.id === activeId ? { ...s, messages: finalMessages } : s
       );
@@ -238,14 +279,17 @@ export default function App() {
       <Header
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
+        rightPanelOpen={rightPanelOpen}
+        setRightPanelOpen={setRightPanelOpen}
         onOpenSettings={() => setSettingsOpen(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
+        hasActiveResearch={Boolean(activeResearchData)}
       />
 
-      {/* App Stage & Shell */}
+      {/* App Stage & Shell with 3-Column Studio Grid */}
       <div className="relative flex-1 flex w-full h-[calc(100vh-56px)] pt-14 overflow-hidden z-10">
-        {/* Mobile Backdrop Overlay when sidebar is open */}
+        {/* Mobile Backdrop Overlay when Left sidebar is open */}
         {sidebarOpen && (
           <div
             onClick={() => setSidebarOpen(false)}
@@ -253,7 +297,15 @@ export default function App() {
           />
         )}
 
-        {/* Collapsible Sidebar */}
+        {/* Mobile Backdrop Overlay when Right inspector is open */}
+        {rightPanelOpen && (
+          <div
+            onClick={() => setRightPanelOpen(false)}
+            className="lg:hidden fixed inset-0 z-25 bg-black/50 backdrop-blur-xs transition-opacity"
+          />
+        )}
+
+        {/* Left Collapsible Navigation Sidebar */}
         <Sidebar
           sidebarOpen={sidebarOpen}
           sessions={sessions}
@@ -263,11 +315,11 @@ export default function App() {
           onDeleteSession={handleDeleteSession}
         />
 
-        {/* Main Stage with non-overlapping flex column */}
+        {/* Center Main Stage (Adapts margins based on left/right panel states) */}
         <main
           className={`flex-1 h-full flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${
-            sidebarOpen ? "sm:pl-64" : "pl-0"
-          }`}
+            sidebarOpen ? "sm:pl-64 sm:w-[calc(100%-16rem)]" : "pl-0"
+          } ${rightPanelOpen ? "lg:pr-[380px]" : "pr-0"}`}
         >
           {isInitialMode ? (
             /* CENTERED LANDING HERO STATE */
@@ -282,9 +334,9 @@ export default function App() {
               />
             </div>
           ) : (
-            /* ACTIVE CHAT WORKSPACE & FLOATING LIQUID GLASS DOCK (TEXT STREAMS BEHIND IT) */
+            /* ACTIVE CHAT WORKSPACE & FLOATING LIQUID GLASS DOCK */
             <div className="relative flex-1 h-full overflow-hidden">
-              {/* Scrollable Messages Stream (Extends under the dock with pb-28 bottom clearance) */}
+              {/* Scrollable Messages Stream */}
               <div
                 ref={stageRef}
                 className="w-full h-full overflow-y-auto stage-scroll-container px-2 sm:px-4 pt-4 pb-28 sm:pb-32"
@@ -293,10 +345,14 @@ export default function App() {
                   messages={messages}
                   isLoading={isLoading}
                   widthClass={activeWidthClass}
+                  onInspectResearch={(data) => {
+                    setActiveResearchData(data);
+                    setRightPanelOpen(true);
+                  }}
                 />
               </div>
 
-              {/* Floating Liquid Glass Dock (Pointer-events transparent wrapper) */}
+              {/* Floating Liquid Glass Dock */}
               <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none flex justify-center px-3 sm:px-6 pb-safe pt-6 bg-gradient-to-t from-[var(--bg-app)]/40 to-transparent">
                 <div className={`w-full ${activeWidthClass} pointer-events-auto`}>
                   <LiquidGlassInput
@@ -312,6 +368,14 @@ export default function App() {
             </div>
           )}
         </main>
+
+        {/* Right Research Inspector Drawer (Zerneza Style) */}
+        <RightInspector
+          isOpen={rightPanelOpen}
+          onClose={() => setRightPanelOpen(false)}
+          researchData={activeResearchData}
+          theme={theme}
+        />
       </div>
 
       {/* Settings Modal */}

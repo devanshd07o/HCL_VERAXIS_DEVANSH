@@ -1,7 +1,12 @@
 import React, { useState } from "react";
-import { Download, FileText, Globe, Search, ShieldCheck, Check, Copy } from "lucide-react";
+import { Download, FileText, Globe, Search, ShieldCheck, Check, Copy, Sparkles, ChevronRight } from "lucide-react";
 
-export default function ChatStream({ messages, isLoading, widthClass = "max-w-[940px]" }) {
+export default function ChatStream({
+  messages,
+  isLoading,
+  widthClass = "max-w-[940px]",
+  onInspectResearch,
+}) {
   return (
     <div className={`w-full ${widthClass} mx-auto px-3 sm:px-4 py-4 flex flex-col gap-6`}>
       {messages.map((msg, idx) => (
@@ -19,12 +24,24 @@ export default function ChatStream({ messages, isLoading, widthClass = "max-w-[9
             <div className="w-full p-4 sm:p-6 rounded-2xl bg-[var(--glass-surface)] backdrop-blur-xl border border-[var(--glass-border)] shadow-sm text-[var(--text-main)] space-y-4">
               {/* Dynamic Research Telemetry Accordion */}
               {msg.type === "research" && (
-                <div className="p-3.5 rounded-xl bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] space-y-2 text-[12.5px] sm:text-[13px]">
-                  <div className="flex items-center gap-2">
-                    <Search className="w-3.5 h-3.5 text-[var(--accent-cyan)] shrink-0" />
-                    <span>
-                      <b>Topic:</b> <span className="opacity-90">{msg.topic}</span>
-                    </span>
+                <div className="p-3.5 rounded-xl bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] space-y-2.5 text-[12.5px] sm:text-[13px]">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--glass-border)] pb-2">
+                    <div className="flex items-center gap-2">
+                      <Search className="w-3.5 h-3.5 text-[var(--accent-cyan)] shrink-0" />
+                      <span>
+                        <b>Topic:</b> <span className="opacity-90">{msg.topic}</span>
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => onInspectResearch && onInspectResearch(msg)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[12px] font-semibold bg-[var(--highlight-bg)] text-[var(--accent-cyan)] border border-[var(--accent-cyan)]/30 hover:bg-[var(--accent-cyan)]/20 active:scale-95 transition-all cursor-pointer shadow-xs"
+                      title="Open in Right Inspector Drawer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Inspect Agent Intel</span>
+                      <ChevronRight className="w-3 h-3 opacity-70" />
+                    </button>
                   </div>
 
                   <div className="flex items-center gap-2">

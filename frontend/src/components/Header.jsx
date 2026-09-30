@@ -1,21 +1,24 @@
 import React from "react";
-import { Menu, Settings, Sun, Moon } from "lucide-react";
+import { Menu, Settings, Sun, Moon, Sparkles, PanelRightClose, PanelRightOpen } from "lucide-react";
 
 export default function Header({
   sidebarOpen,
   setSidebarOpen,
+  rightPanelOpen,
+  setRightPanelOpen,
   onOpenSettings,
   theme,
   onToggleTheme,
+  hasActiveResearch = false,
 }) {
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 px-4 sm:px-6 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-xl border-b border-[var(--glass-border)] transition-colors duration-300">
-      {/* Brand Anchor */}
-      <div className="flex items-center gap-3">
+    <header className="fixed top-0 left-0 right-0 h-14 px-3 sm:px-5 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-xl border-b border-[var(--glass-border)] transition-colors duration-300">
+      {/* Brand Anchor & Left Sidebar Toggle */}
+      <div className="flex items-center gap-2.5">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all"
-          title="Toggle Navigation Sidebar"
+          className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+          title="Toggle Navigation Sidebar (Ctrl+B)"
         >
           <Menu className="w-4 h-4 opacity-80" />
         </button>
@@ -30,29 +33,32 @@ export default function Header({
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-[var(--bg-app)] animate-pulse" />
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-[16px] tracking-tight text-[var(--text-main)]">
+            <span className="font-bold text-[15.5px] tracking-tight text-[var(--text-main)]">
               VERAXIS AI
             </span>
-            <span className="hidden sm:inline-flex text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-md bg-[var(--highlight-bg)] text-[var(--accent-cyan)] border border-[var(--glass-border)]">
-              RESEARCH 3.0
+            <span className="hidden sm:inline-flex text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[var(--highlight-bg)] text-[var(--accent-cyan)] border border-[var(--glass-border)]">
+              SaaS Pro
             </span>
           </div>
         </div>
       </div>
 
       {/* Center Status Pill */}
-      <div className="hidden md:flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[12px] font-medium text-[var(--text-muted)]">
+      <div className="hidden lg:flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[12px] font-medium text-[var(--text-muted)]">
         <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse" />
         <span className="text-[var(--text-main)] font-normal opacity-90">
-          Autonomous Neural Engine Online
+          Autonomous Multi-Agent Engine Online
         </span>
+        <span className="text-[var(--glass-border)]">|</span>
+        <span className="text-[var(--accent-cyan)] text-[11px] font-mono">41 Keys Pool</span>
       </div>
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
+        {/* Theme Toggle */}
         <button
           onClick={onToggleTheme}
-          className="w-9 h-9 rounded-full flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all"
+          className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
           title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
         >
           {theme === "dark" ? (
@@ -62,13 +68,35 @@ export default function Header({
           )}
         </button>
 
+        {/* Preferences Modal Trigger */}
         <button
           onClick={onOpenSettings}
-          className="h-9 px-3 rounded-full flex items-center gap-1.5 bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all text-[13px] font-medium"
+          className="w-9 h-9 sm:w-auto sm:px-3 rounded-xl flex items-center justify-center gap-1.5 bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all text-[13px] font-medium cursor-pointer"
           title="Open Preferences"
         >
           <Settings className="w-3.5 h-3.5 opacity-80" />
-          <span className="hidden sm:inline">Preferences</span>
+          <span className="hidden sm:inline">Settings</span>
+        </button>
+
+        {/* Right Research Inspector Drawer Toggle (Zerneza Style) */}
+        <button
+          onClick={() => setRightPanelOpen(!rightPanelOpen)}
+          className={`h-9 px-3 rounded-xl flex items-center gap-1.5 border transition-all text-[13px] font-medium cursor-pointer ${
+            rightPanelOpen
+              ? "bg-[var(--highlight-bg)] border-[var(--accent-cyan)]/40 text-[var(--accent-cyan)] shadow-xs"
+              : "bg-[var(--glass-surface-subtle)] border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)]"
+          }`}
+          title="Toggle Research Inspector Drawer"
+        >
+          {rightPanelOpen ? (
+            <PanelRightClose className="w-4 h-4" />
+          ) : (
+            <PanelRightOpen className="w-4 h-4" />
+          )}
+          <span className="hidden md:inline">Inspector</span>
+          {hasActiveResearch && (
+            <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-ping" />
+          )}
         </button>
       </div>
     </header>
