@@ -22,7 +22,8 @@ if sys.platform.startswith("win"):
     except Exception:
         pass
 
-from fastapi import FastAPI, HTTPException
+import json
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
@@ -162,6 +163,92 @@ async def get_status():
         "telemetry": telemetry,
         "environment": system_checks
     }
+
+
+@app.get("/status")
+async def get_status_alias():
+    """Direct alias for /api/status endpoint."""
+    return await get_status()
+
+
+@app.get("/keys/list")
+async def get_keys_list():
+    """Returns active key pool configuration and telemetry."""
+    telemetry = key_manager.get_status_telemetry()
+    return {
+        "status": "operational",
+        "total_keys": telemetry.get("total_keys", len(key_manager.groq_keys)),
+        "active_pool": telemetry.get("active_keys", len(key_manager.groq_keys)),
+        "current_index": getattr(key_manager, "current_index", 0),
+        "cooldown_active": telemetry.get("cooling_down", 0),
+        "fast_model": key_manager.fast_model,
+        "primary_model": key_manager.primary_model,
+        "health_score": "100%"
+    }
+
+
+SESSIONS_CACHE_FILE = os.path.join(PROJECT_ROOT, "assets", "sessions.json")
+USER_MEMORY_FILE = os.path.join(PROJECT_ROOT, "assets", "user_memory.json")
+
+
+@app.get("/sessions")
+async def get_sessions_endpoint():
+    """Returns stored research chat sessions."""
+    if os.path.exists(SESSIONS_CACHE_FILE):
+        try:
+            with open(SESSIONS_CACHE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
+
+
+@app.post("/sessions")
+async def save_sessions_endpoint(payload: Any = Body(...)):
+    """Saves or updates research chat sessions."""
+    try:
+        os.makedirs(os.path.dirname(SESSIONS_CACHE_FILE), exist_ok=True)
+        with open(SESSIONS_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+        count = len(payload) if isinstance(payload, list) else 1
+        return {"status": "saved", "count": count}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.get("/user/memory")
+async def get_user_memory_endpoint():
+    """Returns user profile, preferences, and memory tags."""
+    if os.path.exists(USER_MEMORY_FILE):
+        try:
+            with open(USER_MEMORY_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "username": "Devansh",
+        "role": "Research Lead",
+        "theme": "dark",
+        "preferences": {
+            "fontSize": 15,
+            "chatWidth": "standard",
+            "fontFamily": "Plus Jakarta Sans"
+        },
+        "memory": []
+    }
+
+
+@app.post("/user/memory")
+async def save_user_memory_endpoint(payload: Dict[str, Any] = Body(...)):
+    """Updates user memory and preferences."""
+    try:
+        os.makedirs(os.path.dirname(USER_MEMORY_FILE), exist_ok=True)
+        with open(USER_MEMORY_FILE, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+        return {"status": "updated", "data": payload}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 
 
 RESEARCH_TOPICS_POOL = [
