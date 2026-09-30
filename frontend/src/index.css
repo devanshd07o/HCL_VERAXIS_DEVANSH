@@ -2,62 +2,55 @@
 @import "tailwindcss";
 
 :root {
-  /* DARK OBSIDIAN (Pure Neutral Matte Carbon - Zero Bluish Tint) */
-  --bg-app: #090A0E;
-  --island-bg: rgba(18, 19, 24, 0.92);
+  /* ULTRA LUXURY OBSIDIAN GRAPHITE (Linear / Claude 3.5 SaaS Standard - Zero Blue Tint) */
+  --bg-app: #0C0C0E;
+  --island-bg: #141416;
   --island-border: rgba(255, 255, 255, 0.08);
-  --island-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.65), 0 4px 12px rgba(0, 0, 0, 0.45);
+  --island-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.45);
   
-  --glass-surface: rgba(22, 23, 29, 0.88);
-  --glass-surface-subtle: rgba(28, 30, 38, 0.60);
-  --glass-border: rgba(255, 255, 255, 0.09);
-  --glass-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
-  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.10), inset -1px -1px 2px rgba(0, 0, 0, 0.45);
+  --glass-surface: #141416;
+  --glass-surface-subtle: #1C1C1F;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 16px 36px rgba(0, 0, 0, 0.60);
+  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.06);
   
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
+  --text-main: #EDEDF2;
+  --text-muted: #8E90A2;
   --accent-cyan: #38BDF8;
   --accent-blue: #3B82F6;
   --accent-indigo: #6366F1;
   --accent-emerald: #10B981;
   --accent-amber: #F59E0B;
   
-  --sidebar-bg: rgba(14, 15, 20, 0.97);
-  --input-dock-bg: rgba(18, 19, 24, 0.92);
-  --highlight-bg: rgba(255, 255, 255, 0.08);
-  --highlight-text: #38BDF8;
+  --sidebar-bg: #101012;
+  --input-dock-bg: #17171A;
+  --input-border: rgba(255, 255, 255, 0.14);
+  --input-border-hover: rgba(255, 255, 255, 0.25);
+  --input-shadow: 0 14px 40px -6px rgba(0, 0, 0, 0.75), 0 2px 10px rgba(0, 0, 0, 0.45);
+  
+  --highlight-bg: rgba(99, 102, 241, 0.12);
+  --highlight-text: #818CF8;
   --base-font-size: 15px;
 
-  /* Liquid Glass Physics Tokens (Dark Neutral Carbon) */
-  --input-glass-bg: rgba(20, 21, 28, 0.90);
-  --input-glass-border: rgba(255, 255, 255, 0.12);
-  --input-specular-top: 0.35;
-  --input-shadow-drop: rgba(0, 0, 0, 0.60);
-  --input-shadow-ambient: rgba(0, 0, 0, 0.70);
-  --input-glass-inset: inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.16), inset -1.5px -1.5px 4px rgba(0, 0, 0, 0.50);
-  --input-specular-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0.10) 30%, rgba(56, 189, 248, 0.12) 70%, transparent 100%);
-  --input-dome-reflection: radial-gradient(ellipse at 40% 25%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.06) 40%, transparent 80%);
-  --input-dome-opacity: 0.60;
-
   /* Suggestions Chips Tokens */
-  --chip-bg: rgba(255, 255, 255, 0.04);
-  --chip-border: rgba(255, 255, 255, 0.09);
-  --chip-hover-bg: rgba(255, 255, 255, 0.08);
-  --chip-hover-border: rgba(255, 255, 255, 0.20);
+  --chip-bg: #151518;
+  --chip-border: rgba(255, 255, 255, 0.08);
+  --chip-hover-bg: #1E1E23;
+  --chip-hover-border: rgba(99, 102, 241, 0.35);
 }
 
 [data-theme="light"] {
   /* SILK ALABASTER & WARM QUARTZ (Luxury Claude/Perplexity Daylight Aesthetic) */
   --bg-app: #F8F9FA;
-  --island-bg: rgba(255, 255, 255, 0.96);
-  --island-border: rgba(0, 0, 0, 0.07);
+  --island-bg: #FFFFFF;
+  --island-border: rgba(0, 0, 0, 0.08);
   --island-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.03);
   
-  --glass-surface: rgba(255, 255, 255, 0.94);
-  --glass-surface-subtle: rgba(246, 248, 252, 0.85);
+  --glass-surface: #FFFFFF;
+  --glass-surface-subtle: #F1F3F7;
   --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.03);
-  --glass-inset: inset 1px 1px 2px rgba(255, 255, 255, 1), inset -1px -1px 2px rgba(0, 0, 0, 0.03);
+  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  --glass-inset: inset 1px 1px 2px rgba(255, 255, 255, 1);
   
   --text-main: #0F172A;
   --text-muted: #64748B;
@@ -67,27 +60,20 @@
   --accent-emerald: #059669;
   --accent-amber: #D97706;
   
-  --sidebar-bg: rgba(255, 255, 255, 0.97);
-  --input-dock-bg: rgba(255, 255, 255, 0.94);
-  --highlight-bg: rgba(2, 132, 199, 0.09);
-  --highlight-text: #0284C7;
+  --sidebar-bg: #FFFFFF;
+  --input-dock-bg: #FFFFFF;
+  --input-border: rgba(0, 0, 0, 0.12);
+  --input-border-hover: rgba(0, 0, 0, 0.22);
+  --input-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.03);
 
-  /* Liquid Glass Physics Tokens (Light Silk) */
-  --input-glass-bg: rgba(255, 255, 255, 0.95);
-  --input-glass-border: rgba(0, 0, 0, 0.09);
-  --input-specular-top: 0.92;
-  --input-shadow-drop: rgba(0, 0, 0, 0.06);
-  --input-shadow-ambient: rgba(0, 0, 0, 0.08);
-  --input-glass-inset: inset 1px 1px 2px rgba(255, 255, 255, 1), inset -1px -1px 3px rgba(0, 0, 0, 0.03);
-  --input-specular-gradient: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.60) 35%, rgba(2, 132, 199, 0.15) 75%, transparent 100%);
-  --input-dome-reflection: radial-gradient(ellipse at 40% 25%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.25) 40%, transparent 80%);
-  --input-dome-opacity: 0.88;
+  --highlight-bg: rgba(79, 70, 229, 0.08);
+  --highlight-text: #4F46E5;
 
   /* Suggestions Chips Tokens */
-  --chip-bg: rgba(255, 255, 255, 0.90);
+  --chip-bg: #FFFFFF;
   --chip-border: rgba(0, 0, 0, 0.08);
-  --chip-hover-bg: rgba(2, 132, 199, 0.09);
-  --chip-hover-border: rgba(2, 132, 199, 0.35);
+  --chip-hover-bg: #F1F3F9;
+  --chip-hover-border: rgba(79, 70, 229, 0.30);
 }
 
 *, *::before, *::after {
@@ -109,9 +95,22 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Squarish Round Text Box Pill Geometry */
+/* Solid, Squarish Rounded-Corner Input Box (100% Visible & High Contrast) */
 .liquid-glass-input {
-  border-radius: 20px !important;
+  border-radius: 18px !important;
+  background-color: var(--input-dock-bg) !important;
+  border: 1px solid var(--input-border) !important;
+  box-shadow: var(--input-shadow) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.liquid-glass-input:hover {
+  border-color: var(--input-border-hover) !important;
+}
+
+.liquid-glass-input:focus-within {
+  border-color: rgba(99, 102, 241, 0.70) !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18), var(--input-shadow) !important;
 }
 
 /* ============================================================================

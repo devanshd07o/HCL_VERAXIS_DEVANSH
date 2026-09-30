@@ -94,7 +94,7 @@ export default function SettingsModal({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-[#090D16] border border-white/20 flex items-center justify-center text-sky-400">
+                  <div className="w-5 h-5 rounded-full bg-[#111114] border border-white/20 flex items-center justify-center text-sky-400">
                     <Moon className="w-3 h-3" />
                   </div>
                   <span className="font-medium text-[13.5px]">Dark Obsidian</span>
@@ -102,7 +102,7 @@ export default function SettingsModal({
                 {theme === "dark" && <CheckCircle2 className="w-4 h-4 text-[var(--accent-cyan)]" />}
               </div>
               <p className="text-[11px] text-[var(--text-muted)] leading-relaxed">
-                Deep circadian space slate. Low luminance for zero fatigue.
+                Deep neutral obsidian graphite. Zero blue glare for executive focus.
               </p>
             </div>
 

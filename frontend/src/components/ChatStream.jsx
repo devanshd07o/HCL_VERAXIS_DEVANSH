@@ -474,7 +474,7 @@ function CodeBlock({ code, language }) {
   };
 
   return (
-    <div className="relative my-3 rounded-xl border border-[var(--glass-border)] bg-[#0A0E17] overflow-hidden text-[12.5px]">
+    <div className="relative my-3 rounded-xl border border-[var(--glass-border)] bg-[#111114] overflow-hidden text-[12.5px]">
       <div className="flex items-center justify-between px-3.5 py-1.5 border-b border-white/10 bg-white/5 text-[11px] text-[var(--text-muted)] font-mono">
         <span>{language || "text"}</span>
         <button

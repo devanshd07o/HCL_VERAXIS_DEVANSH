@@ -5,7 +5,6 @@ import {
   MessageSquare,
   Search,
   Sparkles,
-  Zap,
   Clock,
   ShieldCheck,
   Settings,
@@ -74,7 +73,7 @@ export default function Sidebar({
         <div className="flex items-center justify-between px-1.5 pt-1 pb-3 border-b border-[var(--glass-border)]">
           <div className="flex items-center gap-2.5">
             <img
-              src={theme === "light" ? "/assets/veraxis_symbol_light.png" : "/assets/veraxis_symbol_dark.png"}
+              src={theme === "dark" ? "/assets/veraxis_symbol_light.png" : "/assets/veraxis_symbol_dark.png"}
               alt="Veraxis"
               className="w-8 h-8 object-contain drop-shadow-sm select-none"
             />
@@ -206,20 +205,9 @@ export default function Sidebar({
           )}
         </div>
 
-        {/* Bottom Profile & Multi-Key Telemetry Card */}
+        {/* Bottom Profile Card */}
         <div className="mt-auto pt-3 border-t border-[var(--glass-border)] space-y-2">
-          {/* Key Pool Telemetry Pill */}
-          <div className="p-2.5 rounded-xl bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <div className="text-[11px] font-medium text-[var(--text-main)]">41 Keys Active</div>
-            </div>
-            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/20">
-              100% HEALTH
-            </span>
-          </div>
-
-          {/* User Card with Settings Button */}
+          {/* User Card with Theme and Settings Buttons */}
           <div className="flex items-center justify-between p-1.5 rounded-xl hover:bg-[var(--glass-surface-subtle)] transition-colors">
             <div className="flex items-center gap-2.5 overflow-hidden">
               <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white text-[12px] font-bold shrink-0 shadow-xs">
@@ -326,13 +314,8 @@ export default function Sidebar({
 
           <div className="w-6 h-[1px] bg-[var(--glass-border)] my-1 shrink-0" />
 
-          {/* Bottom: Keys telemetry dot + Settings Icon */}
+          {/* Bottom: Theme Toggle + Settings Icon */}
           <div className="flex flex-col items-center gap-2 mt-auto">
-            <HoverPill text="41 Keys Active • 100% Health" position="right">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--glass-surface-subtle)] text-emerald-400 cursor-default">
-                <Zap className="w-3.5 h-3.5" />
-              </div>
-            </HoverPill>
 
             <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"} position="right">
               <button

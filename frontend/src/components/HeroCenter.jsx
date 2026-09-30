@@ -12,18 +12,28 @@ export default function HeroCenter({
   theme = "dark",
 }) {
   const symbolSrc =
-    theme === "light"
+    theme === "dark"
       ? "/assets/veraxis_symbol_light.png"
       : "/assets/veraxis_symbol_dark.png";
 
+  const nameSrc =
+    theme === "dark"
+      ? "/assets/veraxis_name_light.png"
+      : "/assets/veraxis_name_dark.png";
+
   return (
     <div className={`w-full ${widthClass} px-3 sm:px-6 flex flex-col items-center gap-6 sm:gap-7 my-auto z-20 animate-buttery-fade-in`}>
-      {/* Brand AI Symbol Centered Above Wide Input Box */}
-      <div className="relative flex flex-col items-center justify-center">
+      {/* Brand AI Symbol & Name Centered Above Wide Input Box */}
+      <div className="relative flex flex-col items-center justify-center gap-2.5">
         <img
           src={symbolSrc}
           alt="VERAXIS AI Symbol"
-          className="w-24 h-24 sm:w-28 sm:h-28 object-contain select-none pointer-events-none drop-shadow-[0_12px_32px_rgba(0,0,0,0.5)] transition-transform duration-300 hover:scale-105"
+          className="w-20 h-20 sm:w-24 sm:h-24 object-contain select-none pointer-events-none drop-shadow-[0_12px_32px_rgba(0,0,0,0.5)] transition-transform duration-300 hover:scale-105"
+        />
+        <img
+          src={nameSrc}
+          alt="VERAXIS AI"
+          className="h-6.5 sm:h-7.5 w-auto object-contain select-none pointer-events-none"
         />
       </div>
 

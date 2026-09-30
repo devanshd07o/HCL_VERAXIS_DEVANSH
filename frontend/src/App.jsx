@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import NeuformCanvas from "./components/NeuformCanvas";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import RightInspector from "./components/RightInspector";
@@ -316,9 +315,6 @@ export default function App() {
 
   return (
     <div className="relative w-screen h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col bg-[var(--bg-app)] text-[var(--text-main)] transition-colors duration-300">
-      {/* Background Neuform Particle Simulation (Active only in landing mode, completely static during chat) */}
-      {isInitialMode && <NeuformCanvas theme={theme} />}
-
       {/* Top Permanent Header Bar */}
       <Header
         sidebarOpen={sidebarOpen}
@@ -412,8 +408,8 @@ export default function App() {
                 />
               </div>
 
-              {/* Floating Liquid Glass Dock */}
-              <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none flex justify-center px-3 sm:px-6 pb-safe pt-6 bg-gradient-to-t from-[var(--bg-app)]/40 to-transparent">
+              {/* Floating Input Dock */}
+              <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none flex justify-center px-3 sm:px-6 pb-4 sm:pb-6 pt-8 bg-gradient-to-t from-[var(--bg-app)] via-[var(--bg-app)]/85 to-transparent">
                 <div className={`w-full ${activeWidthClass} pointer-events-auto`}>
                   <LiquidGlassInput
                     value={inputValue}
