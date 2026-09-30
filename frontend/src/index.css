@@ -2,17 +2,17 @@
 @import "tailwindcss";
 
 :root {
-  /* DARK OBSIDIAN (Deep Twilight Space Slate - Linear/Manus Quality) */
-  --bg-app: #080C14;
-  --island-bg: rgba(14, 20, 32, 0.88);
+  /* DARK OBSIDIAN (Pure Neutral Matte Carbon - Zero Bluish Tint) */
+  --bg-app: #090A0E;
+  --island-bg: rgba(18, 19, 24, 0.92);
   --island-border: rgba(255, 255, 255, 0.08);
-  --island-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(0, 0, 0, 0.4);
+  --island-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.65), 0 4px 12px rgba(0, 0, 0, 0.45);
   
-  --glass-surface: rgba(16, 24, 39, 0.82);
-  --glass-surface-subtle: rgba(22, 32, 51, 0.55);
+  --glass-surface: rgba(22, 23, 29, 0.88);
+  --glass-surface-subtle: rgba(28, 30, 38, 0.60);
   --glass-border: rgba(255, 255, 255, 0.09);
-  --glass-shadow: 0 20px 45px rgba(0, 0, 0, 0.50), 0 4px 12px rgba(0, 0, 0, 0.30);
-  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.12), inset -1px -1px 2px rgba(0, 0, 0, 0.40);
+  --glass-shadow: 0 20px 45px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
+  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.10), inset -1px -1px 2px rgba(0, 0, 0, 0.45);
   
   --text-main: #F8FAFC;
   --text-muted: #94A3B8;
@@ -22,38 +22,38 @@
   --accent-emerald: #10B981;
   --accent-amber: #F59E0B;
   
-  --sidebar-bg: rgba(12, 17, 29, 0.95);
-  --input-dock-bg: rgba(15, 23, 42, 0.85);
-  --highlight-bg: rgba(56, 189, 248, 0.14);
+  --sidebar-bg: rgba(14, 15, 20, 0.97);
+  --input-dock-bg: rgba(18, 19, 24, 0.92);
+  --highlight-bg: rgba(255, 255, 255, 0.08);
   --highlight-text: #38BDF8;
   --base-font-size: 15px;
 
-  /* Liquid Glass Physics Tokens (Dark) */
-  --input-glass-bg: rgba(17, 24, 39, 0.85);
-  --input-glass-border: rgba(255, 255, 255, 0.14);
+  /* Liquid Glass Physics Tokens (Dark Neutral Carbon) */
+  --input-glass-bg: rgba(20, 21, 28, 0.90);
+  --input-glass-border: rgba(255, 255, 255, 0.12);
   --input-specular-top: 0.35;
-  --input-shadow-drop: rgba(0, 0, 0, 0.50);
-  --input-shadow-ambient: rgba(0, 5, 20, 0.60);
-  --input-glass-inset: inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.18), inset -1.5px -1.5px 4px rgba(0, 0, 0, 0.45);
-  --input-specular-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.12) 30%, rgba(56, 189, 248, 0.18) 70%, transparent 100%);
-  --input-dome-reflection: radial-gradient(ellipse at 40% 25%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.08) 40%, transparent 80%);
-  --input-dome-opacity: 0.65;
+  --input-shadow-drop: rgba(0, 0, 0, 0.60);
+  --input-shadow-ambient: rgba(0, 0, 0, 0.70);
+  --input-glass-inset: inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.16), inset -1.5px -1.5px 4px rgba(0, 0, 0, 0.50);
+  --input-specular-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0.10) 30%, rgba(56, 189, 248, 0.12) 70%, transparent 100%);
+  --input-dome-reflection: radial-gradient(ellipse at 40% 25%, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.06) 40%, transparent 80%);
+  --input-dome-opacity: 0.60;
 
   /* Suggestions Chips Tokens */
   --chip-bg: rgba(255, 255, 255, 0.04);
   --chip-border: rgba(255, 255, 255, 0.09);
-  --chip-hover-bg: rgba(56, 189, 248, 0.12);
-  --chip-hover-border: rgba(56, 189, 248, 0.40);
+  --chip-hover-bg: rgba(255, 255, 255, 0.08);
+  --chip-hover-border: rgba(255, 255, 255, 0.20);
 }
 
 [data-theme="light"] {
   /* SILK ALABASTER & WARM QUARTZ (Luxury Claude/Perplexity Daylight Aesthetic) */
-  --bg-app: #F5F7FB;
-  --island-bg: rgba(255, 255, 255, 0.94);
+  --bg-app: #F8F9FA;
+  --island-bg: rgba(255, 255, 255, 0.96);
   --island-border: rgba(0, 0, 0, 0.07);
   --island-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.03);
   
-  --glass-surface: rgba(255, 255, 255, 0.92);
+  --glass-surface: rgba(255, 255, 255, 0.94);
   --glass-surface-subtle: rgba(246, 248, 252, 0.85);
   --glass-border: rgba(0, 0, 0, 0.08);
   --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.03);
@@ -67,13 +67,13 @@
   --accent-emerald: #059669;
   --accent-amber: #D97706;
   
-  --sidebar-bg: rgba(255, 255, 255, 0.96);
-  --input-dock-bg: rgba(255, 255, 255, 0.92);
+  --sidebar-bg: rgba(255, 255, 255, 0.97);
+  --input-dock-bg: rgba(255, 255, 255, 0.94);
   --highlight-bg: rgba(2, 132, 199, 0.09);
   --highlight-text: #0284C7;
 
   /* Liquid Glass Physics Tokens (Light Silk) */
-  --input-glass-bg: rgba(255, 255, 255, 0.94);
+  --input-glass-bg: rgba(255, 255, 255, 0.95);
   --input-glass-border: rgba(0, 0, 0, 0.09);
   --input-specular-top: 0.92;
   --input-shadow-drop: rgba(0, 0, 0, 0.06);
@@ -107,17 +107,6 @@ html, body {
   color: var(--text-main);
   transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(56, 189, 248, 0.14), transparent 70%),
-    radial-gradient(ellipse 55% 40% at 90% 95%, rgba(99, 102, 241, 0.12), transparent 60%),
-    radial-gradient(ellipse 50% 35% at 10% 85%, rgba(168, 85, 247, 0.09), transparent 60%);
-}
-
-[data-theme="light"] body {
-  background-image: 
-    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(2, 132, 199, 0.10), transparent 70%),
-    radial-gradient(ellipse 55% 40% at 90% 95%, rgba(99, 102, 241, 0.08), transparent 60%),
-    radial-gradient(ellipse 50% 35% at 10% 85%, rgba(236, 72, 153, 0.06), transparent 60%);
 }
 
 /* Squarish Round Text Box Pill Geometry */

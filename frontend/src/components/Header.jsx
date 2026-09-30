@@ -1,9 +1,5 @@
 import React from "react";
 import {
-  Menu,
-  Settings,
-  Sun,
-  Moon,
   Sparkles,
   PanelRightClose,
   PanelRightOpen,
@@ -47,9 +43,9 @@ export default function Header({
         <div className="flex items-center gap-2.5 ml-1">
           <div className="relative flex items-center">
             <img
-              src="/assets/veraxis_logo.png"
+              src={theme === "light" ? "/assets/veraxis_symbol_light.png" : "/assets/veraxis_symbol_dark.png"}
               alt="Veraxis AI Logo"
-              className="w-7 h-7 rounded-lg object-cover shadow-sm"
+              className="w-7 h-7 object-contain drop-shadow-xs"
             />
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-[var(--bg-app)] animate-pulse" />
           </div>
@@ -71,33 +67,8 @@ export default function Header({
         </HoverPill>
       </div>
 
-      {/* Right Actions: Symbols Only with Premium Hover Pills */}
+      {/* Right Action: Clean Research Inspector Drawer Toggle */}
       <div className="flex items-center gap-1.5 sm:gap-2">
-        {/* Theme Toggle Symbol */}
-        <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"}>
-          <button
-            onClick={onToggleTheme}
-            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-slate-700" />
-            )}
-          </button>
-        </HoverPill>
-
-        {/* Preferences / Settings Symbol */}
-        <HoverPill text="Preferences & Settings">
-          <button
-            onClick={onOpenSettings}
-            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-          >
-            <Settings className="w-4 h-4 opacity-80" />
-          </button>
-        </HoverPill>
-
-        {/* Research Inspector Drawer Symbol */}
         <HoverPill text={rightPanelOpen ? "Close Inspector (Ctrl+I)" : "Open Research Inspector (Ctrl+I)"}>
           <button
             onClick={() => setRightPanelOpen(!rightPanelOpen)}

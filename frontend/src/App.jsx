@@ -316,8 +316,8 @@ export default function App() {
 
   return (
     <div className="relative w-screen h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col bg-[var(--bg-app)] text-[var(--text-main)] transition-colors duration-300">
-      {/* Background Neuform Particle Simulation */}
-      <NeuformCanvas theme={theme} />
+      {/* Background Neuform Particle Simulation (Active only in landing mode, completely static during chat) */}
+      {isInitialMode && <NeuformCanvas theme={theme} />}
 
       {/* Top Permanent Header Bar */}
       <Header
@@ -361,10 +361,21 @@ export default function App() {
           onSelectSession={handleSelectSession}
           onDeleteSession={handleDeleteSession}
           onOpenSettings={() => setSettingsOpen(true)}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         {/* Center Main Stage (Adapts margins based on left/right panel states) */}
         <main
+          onDoubleClick={(e) => {
+            // If user double-clicks chat screen area when sidebar is open, close it
+            if (sidebarOpen) {
+              const isInteractive = e.target.closest("input, textarea, button, a");
+              if (!isInteractive) {
+                setSidebarOpen(false);
+              }
+            }
+          }}
           className={`flex-1 h-full flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${
             sidebarOpen ? "sm:pl-[300px] md:pl-[340px]" : "sm:pl-[80px] pl-0"
           } ${rightPanelOpen ? "xl:pr-[430px]" : "pr-0"}`}

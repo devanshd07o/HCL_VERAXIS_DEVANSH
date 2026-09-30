@@ -85,6 +85,9 @@ class ChatRequest(BaseModel):
 class TitleRequest(BaseModel):
     messages: List[Dict[str, Any]]
 
+class EnhanceRequest(BaseModel):
+    query: str
+
 
 # ============================================================================
 # Core Frontend & PWA Endpoints
@@ -250,6 +253,46 @@ async def generate_title_endpoint(req: TitleRequest):
         return {"title": "Active Research"}
 
 
+@app.post("/api/enhance")
+async def enhance_query_endpoint(req: EnhanceRequest):
+    """
+    Enhance raw user prompt into an authoritative, deeply structured scientific research inquiry.
+    """
+    raw_query = req.query.strip()
+    if not raw_query:
+        return {"original": "", "enhanced_query": ""}
+
+    try:
+        from backend.router import get_groq_client
+        client = get_groq_client()
+        system_instruction = (
+            "You are an elite scientific research prompt engineer. Given a raw inquiry, "
+            "transform it into an authoritative, deeply structured, and precise academic research question "
+            "optimized for empirical preprint retrieval and scientific analysis. "
+            "Keep it under 2 clear, information-dense sentences. "
+            "Return ONLY the enhanced query text. No preamble, no quotes."
+        )
+        response = client.chat.completions.create(
+            model=key_manager.fast_model,
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": raw_query}
+            ],
+            temperature=0.3,
+            max_tokens=150
+        )
+        enhanced = response.choices[0].message.content.strip().strip('"\'')
+        return {
+            "original": raw_query,
+            "enhanced_query": enhanced or raw_query
+        }
+    except Exception:
+        return {
+            "original": raw_query,
+            "enhanced_query": raw_query
+        }
+
+
 # ============================================================================
 # Chat & Research Orchestrator Endpoint
 # ============================================================================
@@ -269,6 +312,29 @@ async def chat_endpoint(req: ChatRequest):
     intent_data = classify_query_intent(user_query)
     intent = intent_data.get("intent", "GENERAL_CHAT")
     extracted_topic = intent_data.get("extracted_topic", user_query)
+
+    # Internal Query Rephrasing for Deep Research to ensure optimal multi-agent search coverage
+    if intent == "DEEP_RESEARCH":
+        try:
+            from backend.router import get_groq_client
+            client = get_groq_client()
+            rephrase_res = client.chat.completions.create(
+                model=key_manager.fast_model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Rephrase this scientific topic into a precise search keyword string for academic preprint databases. Output only 4 to 8 keywords separated by spaces."
+                    },
+                    {"role": "user", "content": extracted_topic}
+                ],
+                max_tokens=40,
+                temperature=0.2
+            )
+            expanded_keywords = rephrase_res.choices[0].message.content.strip()
+            if expanded_keywords:
+                extracted_topic = f"{extracted_topic} {expanded_keywords}"
+        except Exception:
+            pass
 
     # BRANCH A: CASUAL / INSTANT CONVERSATIONAL QUERY
     if intent == "GENERAL_CHAT":

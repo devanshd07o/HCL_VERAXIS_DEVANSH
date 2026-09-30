@@ -135,17 +135,12 @@ export default function NeuformCanvas({ theme }) {
         const isViolet = i % 2 === 0;
 
         if (isLight) {
-          // Elegant sapphire / slate in light mode
-          const r = isViolet ? 37 : 2;
-          const g = isViolet ? 99 : 132;
-          const b = isViolet ? 235 : 199;
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${brightness * 0.55})`;
+          // Subtle warm graphite / slate in light mode
+          ctx.fillStyle = `rgba(30, 41, 59, ${brightness * 0.35})`;
         } else {
-          // Cyan / violet in dark mode
-          const r = isViolet ? 168 : 56;
-          const g = isViolet ? 85 : 189;
-          const b = isViolet ? 247 : 248;
-          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${brightness * 0.70})`;
+          // Subtle platinum silver & starlight in dark mode (Zero harsh blue/violet)
+          const shade = isViolet ? 220 : 255;
+          ctx.fillStyle = `rgba(${shade}, ${shade}, 255, ${brightness * 0.40})`;
         }
 
         ctx.beginPath();
@@ -170,7 +165,7 @@ export default function NeuformCanvas({ theme }) {
       ref={canvasRef}
       className="fixed inset-0 w-screen h-screen pointer-events-none z-0 transition-opacity duration-500"
       style={{
-        opacity: theme === "light" ? 0.65 : 0.80,
+        opacity: theme === "light" ? 0.30 : 0.40,
       }}
     />
   );

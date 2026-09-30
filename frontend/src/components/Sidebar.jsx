@@ -12,6 +12,8 @@ import {
   X,
   PanelLeftClose,
   PanelLeftOpen,
+  Sun,
+  Moon,
 } from "lucide-react";
 import HoverPill from "./HoverPill";
 
@@ -24,6 +26,8 @@ export default function Sidebar({
   onSelectSession,
   onDeleteSession,
   onOpenSettings,
+  theme = "dark",
+  onToggleTheme,
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchInput, setShowSearchInput] = useState(false);
@@ -69,11 +73,11 @@ export default function Sidebar({
         {/* Brand Header with Close/Collapse Icon */}
         <div className="flex items-center justify-between px-1.5 pt-1 pb-3 border-b border-[var(--glass-border)]">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[var(--accent-blue)] via-[var(--accent-cyan)] to-indigo-500 p-[1.5px] shadow-sm">
-              <div className="w-full h-full bg-[var(--bg-app)] rounded-[10px] flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-[var(--accent-cyan)] animate-pulse-subtle" />
-              </div>
-            </div>
+            <img
+              src={theme === "light" ? "/assets/veraxis_symbol_light.png" : "/assets/veraxis_symbol_dark.png"}
+              alt="Veraxis"
+              className="w-8 h-8 object-contain drop-shadow-sm select-none"
+            />
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5">
                 <span className="font-extrabold text-[15.5px] tracking-tight text-[var(--text-main)]">
@@ -231,13 +235,31 @@ export default function Sidebar({
               </div>
             </div>
 
-            <button
-              onClick={onOpenSettings}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all"
-              title="Preferences"
-            >
-              <Settings className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-1">
+              <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"}>
+                <button
+                  onClick={onToggleTheme}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+                  title="Toggle Theme"
+                >
+                  {theme === "dark" ? (
+                    <Sun className="w-3.5 h-3.5 text-amber-400" />
+                  ) : (
+                    <Moon className="w-3.5 h-3.5 text-slate-700" />
+                  )}
+                </button>
+              </HoverPill>
+
+              <HoverPill text="Preferences & Settings">
+                <button
+                  onClick={onOpenSettings}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+                  title="Preferences"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                </button>
+              </HoverPill>
+            </div>
           </div>
         </div>
       </aside>
@@ -310,6 +332,20 @@ export default function Sidebar({
               <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--glass-surface-subtle)] text-emerald-400 cursor-default">
                 <Zap className="w-3.5 h-3.5" />
               </div>
+            </HoverPill>
+
+            <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"} position="right">
+              <button
+                onClick={onToggleTheme}
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+                title="Toggle Theme"
+              >
+                {theme === "dark" ? (
+                  <Sun className="w-4 h-4 text-amber-400" />
+                ) : (
+                  <Moon className="w-4 h-4 text-slate-700" />
+                )}
+              </button>
             </HoverPill>
 
             <HoverPill text="Preferences & Settings" position="right">
