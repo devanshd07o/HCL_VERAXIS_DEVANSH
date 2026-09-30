@@ -271,7 +271,7 @@ export default function App() {
   const isInitialMode = messages.length === 0;
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden flex flex-col bg-[var(--bg-app)] text-[var(--text-main)] transition-colors duration-300">
+    <div className="relative w-screen h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col bg-[var(--bg-app)] text-[var(--text-main)] transition-colors duration-300">
       {/* Background Neuform Particle Simulation */}
       <NeuformCanvas theme={theme} />
 
@@ -288,7 +288,7 @@ export default function App() {
       />
 
       {/* App Stage & Shell with 3-Column Studio Grid */}
-      <div className="relative flex-1 flex w-full h-[calc(100vh-56px)] pt-14 overflow-hidden z-10">
+      <div className="relative flex-1 flex w-full h-[calc(100dvh-56px)] pt-14 overflow-hidden z-10">
         {/* Mobile Backdrop Overlay when Left sidebar is open */}
         {sidebarOpen && (
           <div

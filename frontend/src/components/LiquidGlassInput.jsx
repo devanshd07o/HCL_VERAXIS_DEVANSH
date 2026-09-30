@@ -156,25 +156,25 @@ export default function LiquidGlassInput({
         onKeyDown={handleKeyDown}
         disabled={disabled}
         placeholder={activePlaceholder}
-        className="relative z-20 flex-1 h-full bg-transparent border-none outline-none text-[var(--text-main)] text-[15.5px] sm:text-[16.5px] font-normal placeholder:text-[var(--text-muted)] placeholder:opacity-60 px-1 truncate"
+        className="relative z-20 flex-1 h-full bg-transparent border-none outline-none text-[var(--text-main)] text-[16px] sm:text-[16.5px] font-normal placeholder:text-[var(--text-muted)] placeholder:opacity-60 px-1 truncate"
         autoComplete="off"
         style={{ caretColor: "var(--accent-cyan)" }}
       />
 
       {/* Right Action Cluster: Mic and Send */}
-      <div className="relative z-20 flex items-center gap-2 shrink-0">
+      <div className="relative z-20 flex items-center gap-1.5 sm:gap-2 shrink-0">
         <button
           type="button"
           onClick={toggleMic}
           disabled={disabled}
           title={isListening ? "Stop Listening" : "Voice Dictation"}
-          className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
+          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             isListening
               ? "mic-listening"
               : "bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95"
           }`}
         >
-          <Mic className="w-4 h-4 opacity-80" />
+          <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4 opacity-80" />
         </button>
 
         <button
@@ -182,9 +182,9 @@ export default function LiquidGlassInput({
           onClick={() => onSend(value)}
           disabled={disabled || !value.trim()}
           title="Send Query"
-          className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-cyan)] text-white hover:opacity-90 active:scale-95 disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-sm transition-all"
+          className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-cyan)] text-white hover:opacity-90 active:scale-95 disabled:opacity-30 disabled:scale-100 disabled:cursor-not-allowed shadow-sm transition-all cursor-pointer"
         >
-          <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+          <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
         </button>
       </div>
     </div>
