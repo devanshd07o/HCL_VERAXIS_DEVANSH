@@ -335,7 +335,7 @@ export default function App() {
       />
 
       {/* App Stage & Shell with 3-Column Studio Grid */}
-      <div className="relative flex-1 flex w-full h-[calc(100dvh-56px)] pt-14 overflow-hidden z-10">
+      <div className="relative flex-1 flex w-full min-h-0 overflow-hidden z-10">
         {isInitialMode && <NeuformCanvas theme={theme} />}
 
         {/* Mobile Backdrop Overlay when Left sidebar is open */}
@@ -380,12 +380,12 @@ export default function App() {
             }
           }}
           className={`flex-1 h-full flex flex-col min-w-0 overflow-hidden transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-            sidebarOpen ? "sm:pl-[300px] md:pl-[340px]" : "sm:pl-[80px] pl-0"
+            sidebarOpen ? "sm:pl-[300px] md:pl-[340px]" : "sm:pl-[70px] pl-0"
           } ${rightPanelOpen ? "xl:pr-[430px]" : "pr-0"}`}
         >
           {isInitialMode ? (
             /* MISSION CONTROL HOMEPAGE WORKBENCH */
-            <div className="flex-1 flex flex-col items-center justify-start p-3 sm:p-6 overflow-y-auto stage-scroll-container">
+            <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 overflow-y-auto stage-scroll-container">
               <HomepagePortal
                 value={inputValue}
                 onChange={setInputValue}

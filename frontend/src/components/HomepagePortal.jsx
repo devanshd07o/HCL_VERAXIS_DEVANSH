@@ -107,25 +107,22 @@ export default function HomepagePortal({
   ];
 
   return (
-    <div className="w-full max-w-[940px] mx-auto px-4 sm:px-6 py-4 sm:py-8 flex flex-col gap-6 select-none animate-buttery-fade-in z-10">
-      {/* 1. EDITORIAL BRAND MASTHEAD (No Duplicate Logos) */}
-      <div className="flex flex-col items-center text-center gap-3 pt-2">
+    <div className="w-full max-w-[800px] mx-auto px-2 sm:px-4 py-1 sm:py-2 flex flex-col gap-2.5 sm:gap-3 select-none animate-buttery-fade-in z-10">
+      {/* 1. EDITORIAL BRAND MASTHEAD */}
+      <div className="flex flex-col items-center text-center gap-1.5 pt-0.5">
         {/* Swarm Status Pill */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-mono tracking-wider bg-[var(--highlight-bg)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] shadow-xs">
-          <Radio className="w-3.5 h-3.5 animate-pulse" />
-          <span>CREWAI MULTI-AGENT SWARM CORE • 41 LPU KEYS ACTIVE</span>
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono tracking-wider bg-[var(--highlight-bg)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] shadow-xs">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>CREWAI MULTI-AGENT RESEARCH SWARM</span>
         </div>
 
         {/* Hero Headline */}
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[var(--text-main)] font-sans leading-[1.15]">
-          Autonomous Scientific <br className="hidden sm:inline" />
-          <span className="bg-gradient-to-r from-[var(--text-main)] via-[var(--accent-primary)] to-[var(--text-main)] bg-clip-text text-transparent">
-            Research & Monograph Console
-          </span>
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-main)] font-sans">
+          Autonomous Scientific Research Console
         </h1>
 
-        <p className="text-[14px] sm:text-[15px] text-[var(--text-muted)] max-w-[620px] leading-relaxed mx-auto font-normal">
-          Synthesizes peer-reviewed preprints, empirical benchmark matrices, and publication-ready LaTeX dossiers in ~12 seconds.
+        <p className="text-[12.5px] sm:text-[13px] text-[var(--text-muted)] max-w-[540px] leading-relaxed mx-auto font-normal">
+          Synthesizes peer-reviewed arXiv preprints, empirical benchmark matrices, and publication dossiers.
         </p>
       </div>
 
@@ -138,10 +135,10 @@ export default function HomepagePortal({
             onSend(currentPreprint.title, "deep");
           }
         }}
-        className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl bg-[var(--glass-surface-subtle)] border border-[var(--island-border)] text-[12px] font-mono text-[var(--text-muted)] hover:border-[var(--accent-primary)]/40 hover:text-[var(--text-main)] transition-all cursor-pointer group shadow-xs"
+        className="w-full flex items-center justify-between gap-3 px-3 py-1.5 rounded-xl bg-[var(--glass-surface-subtle)] border border-[var(--island-border)] text-[11px] font-mono text-[var(--text-muted)] hover:border-[var(--accent-primary)]/40 hover:text-[var(--text-main)] transition-all cursor-pointer group shadow-xs"
       >
-        <div className="flex items-center gap-2.5 truncate">
-          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[var(--highlight-bg)] text-[var(--accent-primary)] font-semibold text-[10.5px]">
+        <div className="flex items-center gap-2 truncate">
+          <span className="flex items-center gap-1 px-1.5 py-0.2 rounded bg-[var(--highlight-bg)] text-[var(--accent-primary)] font-semibold text-[10px]">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] animate-pulse" />
             arXiv Radar
           </span>
@@ -152,7 +149,7 @@ export default function HomepagePortal({
           </span>
         </div>
         <div className="hidden sm:flex items-center gap-2 shrink-0">
-          <span className="px-1.5 py-0.5 rounded bg-black/[0.04] dark:bg-white/[0.05] text-[10.5px] text-[var(--text-muted)]">
+          <span className="px-1.5 py-0.2 rounded bg-black/[0.04] dark:bg-white/[0.05] text-[9.5px] text-[var(--text-muted)]">
             {currentPreprint.tag}
           </span>
           <ArrowUpRight className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-[var(--accent-primary)]" />
@@ -174,16 +171,16 @@ export default function HomepagePortal({
       </div>
 
       {/* 4. EMPIRICAL RESEARCH DIRECTIVES */}
-      <div className="w-full flex flex-col gap-2 pt-1">
-        <div className="flex items-center justify-between text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider px-1">
-          <div className="flex items-center gap-2">
-            <Compass className="w-3.5 h-3.5 text-[var(--accent-primary)]" />
+      <div className="w-full flex flex-col gap-1.5">
+        <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider px-1">
+          <div className="flex items-center gap-1.5">
+            <Compass className="w-3 h-3 text-[var(--accent-primary)]" />
             <span>Empirical Directives</span>
           </div>
-          <span className="text-[10.5px] opacity-60">Click any directive to execute swarm</span>
+          <span className="text-[9.5px] opacity-60">Click directive to execute swarm</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {RESEARCH_SPARKS.map((spark) => (
             <button
               key={spark.num}
@@ -196,32 +193,32 @@ export default function HomepagePortal({
                   onSend(spark.query, mode);
                 }
               }}
-              className="group text-left p-3 rounded-xl bg-[var(--glass-surface-subtle)] hover:bg-[var(--highlight-bg)] border border-[var(--island-border)] hover:border-[var(--accent-primary)]/40 transition-all flex items-start gap-3 cursor-pointer shadow-xs"
+              className="group text-left p-2.5 rounded-xl bg-[var(--glass-surface-subtle)] hover:bg-[var(--highlight-bg)] border border-[var(--island-border)] hover:border-[var(--accent-primary)]/40 transition-all flex items-center gap-2.5 cursor-pointer shadow-xs"
             >
-              <span className="w-6 h-6 rounded-md bg-[var(--island-bg)] text-[var(--accent-primary)] text-[11px] font-mono font-bold flex items-center justify-center shrink-0 mt-0.5 border border-[var(--island-border)] group-hover:border-[var(--accent-primary)]/40 transition-colors">
+              <span className="w-5 h-5 rounded-md bg-[var(--island-bg)] text-[var(--accent-primary)] text-[10px] font-mono font-bold flex items-center justify-center shrink-0 border border-[var(--island-border)] group-hover:border-[var(--accent-primary)]/40 transition-colors">
                 {spark.num}
               </span>
               <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-mono text-[var(--accent-primary)] uppercase tracking-wide mb-0.5">
+                <div className="text-[9.5px] font-mono text-[var(--accent-primary)] uppercase tracking-wide">
                   {spark.tag}
                 </div>
-                <div className="text-[12.5px] sm:text-[13px] font-medium text-[var(--text-main)] group-hover:text-[var(--accent-primary)] transition-colors leading-snug line-clamp-2">
+                <div className="text-[12px] font-medium text-[var(--text-main)] group-hover:text-[var(--accent-primary)] transition-colors leading-tight truncate">
                   {spark.query}
                 </div>
               </div>
-              <ArrowUpRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--accent-primary)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0 mt-1" />
+              <ArrowUpRight className="w-3.5 h-3.5 text-[var(--text-muted)] group-hover:text-[var(--accent-primary)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
             </button>
           ))}
         </div>
       </div>
 
       {/* 5. MINIMALIST CREWAI HARDWARE PIPELINE MONITOR */}
-      <div className="w-full flex items-center justify-between gap-2 p-2.5 rounded-xl bg-[var(--glass-surface-subtle)] border border-[var(--island-border)] text-[11px] font-mono text-[var(--text-muted)] overflow-x-auto shadow-xs">
+      <div className="w-full flex items-center justify-between gap-2 py-1.5 px-3 rounded-lg bg-[var(--glass-surface-subtle)] border border-[var(--island-border)] text-[10px] font-mono text-[var(--text-muted)] overflow-x-auto shadow-xs">
         <div className="flex items-center gap-1.5 shrink-0 text-[var(--text-main)] font-semibold">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>CrewAI Swarm Pipeline:</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span>Swarm Pipeline:</span>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[var(--accent-primary)] font-medium">01 Analyst</span>
           <span className="opacity-30">➔</span>
           <span className="text-[var(--accent-primary)] font-medium">02 arXiv REST</span>

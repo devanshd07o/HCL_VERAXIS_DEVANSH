@@ -250,11 +250,11 @@ export default function Sidebar({
       </aside>
 
       {/* ============================================================ */}
-      {/* 2. COLLAPSED MINI LEFT RAIL (Visible on desktop when collapsed) */}
+      {/* 2. COLLAPSED MINI FLOATING DOCK (Sleek Compact Capsule)      */}
       {/* ============================================================ */}
       <aside
         onDoubleClick={() => setSidebarOpen?.(true)}
-        className={`fixed top-16 bottom-3 left-3 z-20 hidden sm:flex flex-col items-center py-3 px-2 w-14 sm:w-16 bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] rounded-2xl sm:rounded-3xl shadow-[var(--island-shadow)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed top-18 left-3 z-20 hidden sm:flex flex-col items-center p-1.5 w-12 rounded-2xl bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] shadow-[var(--island-shadow)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] gap-1.5 ${
           !sidebarOpen
             ? "translate-x-0 opacity-100 pointer-events-auto"
             : "-translate-x-[calc(100%+24px)] opacity-0 pointer-events-none"
@@ -264,7 +264,7 @@ export default function Sidebar({
         <HoverPill text="Expand Sidebar (Ctrl+B)" position="right">
           <button
             onClick={() => setSidebarOpen?.(true)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer mb-2"
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
           >
             <PanelLeftOpen className="w-4 h-4 opacity-80" />
           </button>
@@ -274,40 +274,38 @@ export default function Sidebar({
         <HoverPill text="New Research Chat" position="right">
           <button
             onClick={onNewSession}
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xs hover:brightness-110 active:scale-95 transition-all cursor-pointer mb-2"
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xs hover:brightness-110 active:scale-95 transition-all cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[2.5]" />
           </button>
         </HoverPill>
 
-        {/* Spacer */}
-        <div className="flex-1" />
+        {/* Hairline Divider */}
+        <div className="w-5 h-[1px] bg-[var(--island-border)] my-0.5" />
 
         {/* Bottom: Theme Toggle + Settings Icon */}
-        <div className="flex flex-col items-center gap-2 mt-auto">
-          <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"} position="right">
-            <button
-              onClick={onToggleTheme}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-              title="Toggle Theme"
-            >
-              {theme === "dark" ? (
-                <Sun className="w-4 h-4 text-amber-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-slate-700" />
-              )}
-            </button>
-          </HoverPill>
+        <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"} position="right">
+          <button
+            onClick={onToggleTheme}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+            title="Toggle Theme"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+            ) : (
+              <Moon className="w-3.5 h-3.5 text-slate-700" />
+            )}
+          </button>
+        </HoverPill>
 
-          <HoverPill text="Preferences & Settings" position="right">
-            <button
-              onClick={onOpenSettings}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-            >
-              <Settings className="w-4 h-4 opacity-80" />
-            </button>
-          </HoverPill>
-        </div>
+        <HoverPill text="Preferences & Settings" position="right">
+          <button
+            onClick={onOpenSettings}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+          >
+            <Settings className="w-3.5 h-3.5 opacity-80" />
+          </button>
+        </HoverPill>
       </aside>
     </>
   );

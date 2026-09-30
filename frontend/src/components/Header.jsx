@@ -29,7 +29,7 @@ export default function Header({
   return (
     <header
       onDoubleClick={onDoubleClickHeader}
-      className="fixed top-0 left-0 right-0 h-14 px-3 sm:px-5 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-2xl border-b border-[var(--glass-border)] transition-colors duration-300 select-none"
+      className="relative w-full h-14 shrink-0 px-3 sm:px-6 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-2xl border-b border-[var(--glass-border)] transition-colors duration-300 select-none"
     >
       {/* Brand Anchor */}
       <div className="flex items-center gap-3">
@@ -38,14 +38,14 @@ export default function Header({
             <img
               src={symbolSrc}
               alt="VERAXIS AI Symbol"
-              className="w-8 h-8 object-contain drop-shadow-xs select-none"
+              className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-xs select-none"
             />
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-[var(--bg-app)] animate-pulse" />
           </div>
           <img
             src={nameSrc}
             alt="VERAXIS A.I"
-            className="h-5.5 sm:h-6 w-auto object-contain select-none"
+            className="h-5 sm:h-5.5 w-auto object-contain select-none"
           />
         </div>
 
@@ -62,13 +62,13 @@ export default function Header({
       </div>
 
       {/* Center Dynamic Status or Title */}
-      <div className="flex-1 flex justify-center px-4 max-w-[550px]">
+      <div className="flex-1 flex justify-center px-4 max-w-[500px]">
         {isInitialMode ? (
-          <div className="hidden md:flex items-center gap-2 text-[11.5px] font-mono text-[var(--text-muted)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span className="text-[var(--text-main)] font-semibold">41 LPU Keys Active</span>
+          <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[var(--text-main)] font-medium">CrewAI Multi-Agent Swarm</span>
             <span className="opacity-40">•</span>
-            <span>CrewAI Multi-Agent Swarm</span>
+            <span>Online</span>
           </div>
         ) : (
           <span className="text-[13px] sm:text-[13.5px] font-medium text-[var(--text-main)] truncate opacity-90 select-none">

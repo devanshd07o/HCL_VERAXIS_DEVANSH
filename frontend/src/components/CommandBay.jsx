@@ -146,21 +146,21 @@ export default function CommandBay({
       className={`relative w-full transition-all duration-300 select-none ${
         isWorkbench
           ? isDark
-            ? "rounded-2xl p-4 sm:p-5 bg-[#13151D] border border-white/[0.10] shadow-[0_24px_50px_-12px_rgba(0,0,0,0.7)]"
-            : "rounded-2xl p-4 sm:p-5 bg-white border border-black/[0.09] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.07)]"
+            ? "rounded-2xl p-3 sm:p-4 bg-[#13151D] border border-white/[0.10] shadow-[0_20px_45px_-10px_rgba(0,0,0,0.65)]"
+            : "rounded-2xl p-3 sm:p-4 bg-white border border-black/[0.09] shadow-[0_16px_36px_-10px_rgba(0,0,0,0.06)]"
           : isDark
-          ? "rounded-xl p-3 bg-[#13151D] border border-white/[0.10] shadow-[0_14px_32px_-6px_rgba(0,0,0,0.6)]"
-          : "rounded-xl p-3 bg-white border border-black/[0.09] shadow-[0_12px_28px_-6px_rgba(0,0,0,0.06)]"
+          ? "rounded-xl p-2.5 sm:p-3 bg-[#13151D] border border-white/[0.10] shadow-[0_12px_28px_-6px_rgba(0,0,0,0.5)]"
+          : "rounded-xl p-2.5 sm:p-3 bg-white border border-black/[0.09] shadow-[0_10px_24px_-6px_rgba(0,0,0,0.05)]"
       }`}
     >
-      {/* Top Console Deck: Dual Rocker Mode Switcher & LPU Telemetry */}
-      <div className="flex items-center justify-between gap-3 pb-3 mb-2.5 border-b border-[var(--island-border)]">
+      {/* Top Console Deck: Dual Rocker Mode Switcher */}
+      <div className="flex items-center justify-between gap-3 pb-2 mb-1.5 border-b border-[var(--island-border)]">
         {/* Tactile Mode Rocker */}
-        <div className={`inline-flex p-1 rounded-xl border ${isDark ? "bg-[#0B0C10] border-white/[0.07]" : "bg-[#F0F2F6] border-black/[0.06]"}`}>
+        <div className={`inline-flex p-0.5 sm:p-1 rounded-xl border ${isDark ? "bg-[#0B0C10] border-white/[0.07]" : "bg-[#F0F2F6] border-black/[0.06]"}`}>
           <button
             type="button"
             onClick={() => setMode?.("deep")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-mono font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg text-[11.5px] font-mono font-semibold transition-all cursor-pointer ${
               mode === "deep"
                 ? isDark
                   ? "bg-[#1C1F2B] text-[#FF5C00] border border-[#FF5C00]/40 shadow-xs"
@@ -170,7 +170,7 @@ export default function CommandBay({
           >
             <Compass className="w-3.5 h-3.5" />
             <span>CrewAI Deep Swarm</span>
-            <span className={`hidden sm:inline text-[10px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[#FF5C00]/90" : "bg-black/[0.05] text-[#E04F00]"}`}>
+            <span className={`hidden sm:inline text-[9.5px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[#FF5C00]/90" : "bg-black/[0.05] text-[#E04F00]"}`}>
               ~12s
             </span>
           </button>
@@ -178,7 +178,7 @@ export default function CommandBay({
           <button
             type="button"
             onClick={() => setMode?.("fast")}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-mono font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg text-[11.5px] font-mono font-semibold transition-all cursor-pointer ${
               mode === "fast"
                 ? isDark
                   ? "bg-[#1C1F2B] text-[#FF5C00] border border-[#FF5C00]/40 shadow-xs"
@@ -188,23 +188,21 @@ export default function CommandBay({
           >
             <Zap className="w-3.5 h-3.5" />
             <span>Rapid Synthesis</span>
-            <span className={`hidden sm:inline text-[10px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[#FF5C00]/90" : "bg-black/[0.05] text-[#E04F00]"}`}>
+            <span className={`hidden sm:inline text-[9.5px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[#FF5C00]/90" : "bg-black/[0.05] text-[#E04F00]"}`}>
               &lt;400ms
             </span>
           </button>
         </div>
 
-        {/* Live LPU Telemetry Badge */}
-        <div className="hidden xs:flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)]">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[var(--text-main)] font-semibold">41 Groq LPU Keys</span>
-          <span className="opacity-40">•</span>
-          <span>120B Consensus</span>
+        {/* Engine Status Beacon */}
+        <div className="hidden xs:flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-muted)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[var(--text-muted)] opacity-80">Swarm Ready</span>
         </div>
       </div>
 
       {/* Main Command Input Area */}
-      <div className="relative flex items-start gap-2.5 my-1.5">
+      <div className="relative flex items-start gap-2.5 my-1">
         <textarea
           ref={inputRef}
           rows={isWorkbench ? 2 : 1}
