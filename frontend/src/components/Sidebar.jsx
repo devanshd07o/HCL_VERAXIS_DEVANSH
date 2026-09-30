@@ -31,13 +31,11 @@ export default function Sidebar({
   );
 
   return (
-    <>
-      {/* 1. EXPANDED SIDEBAR DRAWER */}
-      <aside
-        className={`fixed top-14 bottom-0 left-0 z-35 flex flex-col w-72 sm:w-80 bg-[var(--island-bg)] backdrop-blur-2xl border-r border-[var(--island-border)] shadow-xl transition-transform duration-200 ease-out ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
-        }`}
-      >
+    <aside
+      className={`fixed top-13 bottom-0 left-0 z-35 flex flex-col w-72 sm:w-80 bg-[var(--island-bg)] backdrop-blur-2xl border-r border-[var(--island-border)] shadow-xl transition-transform duration-200 ease-out ${
+        sidebarOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"
+      }`}
+    >
         {/* Top Action Bar: New Chat & Search & Close */}
         <div className="p-3 border-b border-[var(--glass-border)] flex flex-col gap-2">
           <div className="flex items-center justify-between">
@@ -156,40 +154,5 @@ export default function Sidebar({
           </button>
         </div>
       </aside>
-
-      {/* 2. MINIMALIST COLLAPSED LEFT DOCK */}
-      {!sidebarOpen && (
-        <aside className="hidden sm:flex fixed top-18 left-3 z-30 flex-col items-center gap-2 p-1.5 rounded-2xl bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] shadow-md select-none">
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-subtle)] transition-all cursor-pointer"
-            title="Expand Sidebar (Ctrl+B)"
-          >
-            <PanelLeft className="w-4 h-4" />
-          </button>
-
-          <button
-            type="button"
-            onClick={onNewSession}
-            className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xs hover:brightness-110 active:scale-95 transition-all cursor-pointer"
-            title="New Research (Ctrl+K)"
-          >
-            <Plus className="w-4 h-4 stroke-[2.5]" />
-          </button>
-
-          <div className="w-4 h-[1px] bg-[var(--island-border)] my-0.5" />
-
-          <button
-            type="button"
-            onClick={onOpenSettings}
-            className="w-8 h-8 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-subtle)] transition-all cursor-pointer"
-            title="Settings"
-          >
-            <Settings className="w-3.5 h-3.5" />
-          </button>
-        </aside>
-      )}
-    </>
   );
 }

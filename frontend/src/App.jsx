@@ -344,11 +344,11 @@ export default function App() {
 
       {/* Main Container */}
       <div className="relative flex-1 flex w-full min-h-0 overflow-hidden">
-        {/* Mobile Backdrop when sidebar is open */}
+        {/* Backdrop when sidebar is open on smaller screens */}
         {sidebarOpen && (
           <div
             onClick={() => setSidebarOpen(false)}
-            className="sm:hidden fixed inset-0 z-25 bg-black/50 backdrop-blur-xs"
+            className="md:hidden fixed inset-0 z-25 bg-black/40 backdrop-blur-xs transition-opacity"
           />
         )}
 
@@ -369,7 +369,7 @@ export default function App() {
         {/* Center Main Stage */}
         <main
           className={`flex-1 h-full flex flex-col min-w-0 overflow-hidden transition-[padding] duration-200 ease-out ${
-            sidebarOpen ? "sm:pl-[300px] md:pl-[330px]" : "sm:pl-[64px] pl-0"
+            sidebarOpen ? "md:pl-[320px] pl-0" : "pl-0"
           }`}
         >
           {isInitialMode ? (
