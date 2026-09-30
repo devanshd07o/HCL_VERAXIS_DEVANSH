@@ -1,15 +1,15 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Mic, ArrowUp, Sparkles, Loader2, Zap, Compass, Check } from "lucide-react";
+import { Mic, ArrowUp, Sparkles, Loader2, Zap, Compass, Check, Terminal, Radio } from "lucide-react";
 import HoverPill from "./HoverPill";
 
 const TYPEWRITER_PHRASES = [
-  "Investigate solid-state battery ceramic electrolyte benchmarks...",
-  "Evaluate CRISPR-Cas9 in vivo base editing clinical trial breakthroughs...",
-  "Analyze NIST Post-Quantum lattice cryptography vulnerabilities...",
-  "Audit commercial nuclear fusion net-energy Q-factor milestones...",
-  "Cross-verify room-temperature superconductor replication trials...",
-  "Assess neuromorphic photonic tensor processors vs GPU clusters...",
-  "Explore high-density brain-computer interface decoding bandwidth...",
+  "Investigate solid-state battery ceramic electrolyte conductivity & dendrite mitigation...",
+  "Evaluate CRISPR-Cas9 in vivo base editing clinical breakthroughs & viral vector safety...",
+  "Analyze NIST Post-Quantum lattice cryptography standards against Shor's algorithm...",
+  "Audit commercial nuclear fusion net-energy Q-factor milestones in SPARC tokamaks...",
+  "Cross-verify room-temperature hydride superconductor replication trials & diamagnetism...",
+  "Assess silicon neuromorphic photonic tensor processors vs GPU cluster throughput...",
+  "Explore high-density intracortical neural lace decoding bandwidth in human trials...",
 ];
 
 export default function CommandBay({
@@ -29,7 +29,7 @@ export default function CommandBay({
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Typewriter effect when value is empty and not listening
+  // Typewriter rotation when input is empty
   useEffect(() => {
     if (value || isListening) return;
 
@@ -49,15 +49,15 @@ export default function CommandBay({
         charIndex++;
       }
 
-      let speed = isDeleting ? 25 : 50;
+      let speed = isDeleting ? 20 : 45;
 
       if (!isDeleting && charIndex === currentPhrase.length) {
-        speed = 2200;
+        speed = 2400;
         isDeleting = true;
       } else if (isDeleting && charIndex === 0) {
         isDeleting = false;
         phraseIndex = (phraseIndex + 1) % TYPEWRITER_PHRASES.length;
-        speed = 400;
+        speed = 350;
       }
 
       timeoutId = setTimeout(tick, speed);
@@ -70,7 +70,7 @@ export default function CommandBay({
     };
   }, [value, isListening]);
 
-  // Web Speech API
+  // Speech Recognition API
   useEffect(() => {
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SpeechAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -84,12 +84,12 @@ export default function CommandBay({
         const transcript = event.results[0][0].transcript;
         if (transcript) {
           onChange(transcript);
-          onSend(transcript, mode);
+          inputRef.current?.focus();
         }
       };
       recognitionRef.current = rec;
     }
-  }, [onChange, onSend, mode]);
+  }, [onChange]);
 
   const toggleMic = () => {
     if (!recognitionRef.current) {
@@ -133,122 +133,137 @@ export default function CommandBay({
   };
 
   const activePlaceholder = isListening
-    ? "Acoustic sensor active... Speak research query"
-    : placeholder || typewriterText || "Enter scientific research directive or technical query...";
+    ? "Acoustic sensor active... Speak your research topic clearly"
+    : placeholder || typewriterText || "Enter scientific research directive, hypothesis, or technical query...";
 
   const isWorkbench = variant === "workbench";
+  const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
 
   return (
     <div
-      className={`w-full transition-all duration-200 ${
+      className={`relative w-full transition-all duration-300 select-none ${
         isWorkbench
-          ? "rounded-2xl p-3 sm:p-4 bg-[var(--input-dock-bg)] border border-[var(--input-border)] shadow-[var(--input-shadow)]"
-          : "rounded-xl p-2 sm:p-2.5 bg-[var(--input-dock-bg)] border border-[var(--input-border)] shadow-[var(--input-shadow)]"
+          ? "rounded-2xl p-4 sm:p-5 bg-[#14161C] border border-white/[0.10] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.6)]"
+          : "rounded-xl p-2.5 sm:p-3 bg-[#14161C] border border-white/[0.10] shadow-[0_12px_30px_-5px_rgba(0,0,0,0.5)]"
       }`}
     >
-      {/* Top Console Bar: Execution Mode Selector & Status */}
-      <div className="flex items-center justify-between gap-2 pb-2.5 mb-2 border-b border-white/[0.06] select-none text-[12px]">
-        {/* Dual Mode Switcher */}
-        <div className="flex items-center p-0.5 rounded-lg bg-[var(--bg-app)] border border-white/[0.06]">
+      {/* Top Console Deck: Dual Rocker Mode Switcher & LPU Telemetry */}
+      <div className="flex items-center justify-between gap-3 pb-3 mb-2.5 border-b border-white/[0.07]">
+        {/* Tactile Mode Rocker */}
+        <div className="inline-flex p-1 rounded-xl bg-black/40 border border-white/[0.07]">
           <button
             type="button"
             onClick={() => setMode?.("deep")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-mono font-semibold transition-all cursor-pointer ${
               mode === "deep"
-                ? "bg-[var(--island-bg)] text-[var(--accent-primary)] shadow-xs border border-[var(--accent-primary)]/30"
-                : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                ? "bg-[#1E222D] text-[#FF5C00] border border-[#FF5C00]/40 shadow-xs"
+                : "text-[var(--text-muted)] hover:text-white"
             }`}
           >
             <Compass className="w-3.5 h-3.5" />
-            <span>Deep Empirical Swarm</span>
-            <span className="hidden sm:inline text-[10px] font-mono opacity-70">~12s</span>
+            <span>CrewAI Deep Swarm</span>
+            <span className="hidden sm:inline text-[10px] px-1 py-0.2 rounded bg-black/50 text-[#FF5C00]/80">
+              ~12s
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => setMode?.("fast")}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11.5px] font-semibold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-mono font-semibold transition-all cursor-pointer ${
               mode === "fast"
-                ? "bg-[var(--island-bg)] text-[var(--accent-primary)] shadow-xs border border-[var(--accent-primary)]/30"
-                : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                ? "bg-[#1E222D] text-[#FF5C00] border border-[#FF5C00]/40 shadow-xs"
+                : "text-[var(--text-muted)] hover:text-white"
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
-            <span>Fast Synthesis</span>
-            <span className="hidden sm:inline text-[10px] font-mono opacity-70">&lt;400ms</span>
+            <span>Rapid Synthesis</span>
+            <span className="hidden sm:inline text-[10px] px-1 py-0.2 rounded bg-black/50 text-[#FF5C00]/80">
+              &lt;400ms
+            </span>
           </button>
         </div>
 
-        {/* Engine Beacon Indicator */}
-        <div className="hidden xs:flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-muted)]">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>41 Groq LPU Keys Active</span>
+        {/* Live LPU Telemetry Badge */}
+        <div className="hidden xs:flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)]">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[var(--text-main)] font-medium">41 Groq LPU Keys</span>
+          <span className="opacity-40">•</span>
+          <span>120B Consensus</span>
         </div>
       </div>
 
-      {/* Input Field & Action Cluster */}
-      <div className="flex items-center gap-2">
-        <input
+      {/* Main Command Input Area */}
+      <div className="relative flex items-start gap-2.5 my-1">
+        <textarea
           ref={inputRef}
-          type="text"
+          rows={isWorkbench ? 2 : 1}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled || isEnhancing}
           placeholder={activePlaceholder}
-          className="flex-1 py-1.5 px-2 bg-transparent border-none outline-none text-[var(--text-main)] text-[14.5px] sm:text-[15.5px] font-normal placeholder:text-[var(--text-muted)] placeholder:opacity-60 truncate"
+          className="flex-1 w-full bg-transparent border-none outline-none resize-none text-[var(--text-main)] text-[14.5px] sm:text-[15.5px] font-normal placeholder:text-[var(--text-muted)] placeholder:opacity-50 py-1 px-1 leading-relaxed selection:bg-[#FF5C00]/30"
           autoComplete="off"
-          style={{ caretColor: "var(--accent-primary)" }}
+          style={{ caretColor: "#FF5C00" }}
         />
+      </div>
 
-        {/* Right Action Cluster */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          {/* Enhance Directive Button */}
-          <HoverPill text="Enhance Query into Structured Academic Directive">
+      {/* Bottom Action Deck */}
+      <div className="flex items-center justify-between pt-2.5 mt-1 border-t border-white/[0.06] text-[11.5px] font-mono text-[var(--text-muted)]">
+        {/* Left Stats */}
+        <div className="flex items-center gap-3">
+          <span className="opacity-70">{wordCount} words</span>
+          {isWorkbench && (
+            <span className="hidden sm:inline opacity-50">• Press Enter to execute</span>
+          )}
+        </div>
+
+        {/* Right Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* Enhance Button */}
+          <HoverPill text="Enhance prompt into academic research inquiry in place">
             <button
               type="button"
               onClick={handleEnhance}
               disabled={disabled || isEnhancing || !value.trim()}
-              className="h-8.5 px-2.5 rounded-lg flex items-center gap-1.5 text-[11.5px] font-semibold bg-[var(--highlight-bg)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/20 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[11px] font-mono font-semibold bg-white/[0.04] border border-white/[0.08] text-[var(--text-main)] hover:bg-[#FF5C00]/15 hover:border-[#FF5C00]/35 hover:text-[#FF5C00] active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
             >
               {isEnhancing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#FF5C00]" />
               ) : (
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-3.5 h-3.5 text-[#FF5C00]" />
               )}
-              <span className="hidden sm:inline">
-                {isEnhancing ? "Refining..." : "Enhance"}
-              </span>
+              <span>{isEnhancing ? "Refining..." : "Enhance"}</span>
             </button>
           </HoverPill>
 
-          {/* Voice Dictation (Mic) Button */}
+          {/* Voice Dictation (Mic) */}
           <HoverPill text={isListening ? "Stop Voice Dictation" : "Voice Dictation"}>
             <button
               type="button"
               onClick={toggleMic}
               disabled={disabled || isEnhancing}
-              className={`w-8.5 h-8.5 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
                 isListening
                   ? "bg-rose-500/20 text-rose-400 border border-rose-500/50 animate-pulse"
-                  : "bg-[var(--island-bg)] border border-white/[0.08] text-[var(--text-main)] hover:border-white/[0.18] active:scale-95"
+                  : "bg-white/[0.04] border border-white/[0.08] text-[var(--text-main)] hover:border-white/[0.2] active:scale-95"
               }`}
             >
-              <Mic className="w-3.5 h-3.5 opacity-85" />
+              <Mic className="w-3.5 h-3.5 opacity-80" />
             </button>
           </HoverPill>
 
           {/* Execute Directive Button */}
-          <HoverPill text="Execute Directive (Enter)">
-            <button
-              type="button"
-              onClick={() => onSend(value, mode)}
-              disabled={disabled || !value.trim() || isEnhancing}
-              className="w-8.5 h-8.5 rounded-lg flex items-center justify-center bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer font-bold shadow-xs"
-            >
-              <ArrowUp className="w-4 h-4 stroke-[2.5]" />
-            </button>
-          </HoverPill>
+          <button
+            type="button"
+            onClick={() => onSend(value, mode)}
+            disabled={disabled || !value.trim() || isEnhancing}
+            className="h-8 px-3.5 rounded-lg flex items-center gap-1.5 bg-[#FF5C00] text-white hover:brightness-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer font-bold shadow-xs text-[12px]"
+          >
+            <span>Execute</span>
+            <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
+          </button>
         </div>
       </div>
     </div>
