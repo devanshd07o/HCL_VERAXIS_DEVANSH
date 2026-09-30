@@ -170,7 +170,7 @@ export default function NeuformCanvas({ theme }) {
       ref={canvasRef}
       className="fixed inset-0 w-screen h-screen pointer-events-none z-0 transition-opacity duration-500"
       style={{
-        opacity: theme === "light" ? 0.40 : 0.55,
+        opacity: theme === "light" ? 0.65 : 0.80,
       }}
     />
   );

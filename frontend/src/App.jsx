@@ -66,6 +66,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [activeResearchData, setActiveResearchData] = useState(null);
+  const [chatTitle, setChatTitle] = useState("New Chat");
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -148,6 +149,7 @@ export default function App() {
     setCurrentSessionId(null);
     setMessages([]);
     setInputValue("");
+    setChatTitle("New Chat");
     setActiveResearchData(null);
     fetchDynamicSuggestions();
     if (window.innerWidth < 768) {
@@ -159,6 +161,7 @@ export default function App() {
     const sess = sessions.find((s) => s.id === id);
     if (!sess) return;
     setCurrentSessionId(id);
+    setChatTitle(sess.title || "New Chat");
     const msgs = sess.messages || [];
     setMessages(msgs);
     // Find latest research message in this session to populate Inspector
@@ -188,7 +191,7 @@ export default function App() {
     }
   }, [messages, isLoading]);
 
-  // Send Query Handler
+  // Send Query Handler with 2-Stage AI Title Renaming
   const handleSendQuery = async (queryText) => {
     const text = (queryText || inputValue).trim();
     if (!text || isLoading) return;
@@ -200,6 +203,22 @@ export default function App() {
     const updatedMessages = [...messages, newMsg];
     setMessages(updatedMessages);
 
+    // Stage 1: Auto-title if first query has 3+ words
+    const words = text.split(/\s+/).filter(Boolean);
+    let sessionTitle = chatTitle;
+    if (messages.length === 0) {
+      if (words.length >= 3) {
+        sessionTitle = words
+          .slice(0, 4)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(" ");
+        setChatTitle(sessionTitle);
+      } else {
+        sessionTitle = text;
+        setChatTitle(sessionTitle);
+      }
+    }
+
     // Persist session
     let activeId = currentSessionId;
     let updatedSessions = [...sessions];
@@ -207,16 +226,15 @@ export default function App() {
     if (!activeId) {
       activeId = "sess-" + Date.now();
       setCurrentSessionId(activeId);
-      const title = text.length > 30 ? text.substring(0, 30) + "..." : text;
       updatedSessions.unshift({
         id: activeId,
-        title,
+        title: sessionTitle,
         createdAt: new Date().toISOString(),
         messages: updatedMessages,
       });
     } else {
       updatedSessions = updatedSessions.map((s) =>
-        s.id === activeId ? { ...s, messages: updatedMessages } : s
+        s.id === activeId ? { ...s, messages: updatedMessages, title: sessionTitle } : s
       );
     }
     saveSessionsToStorage(updatedSessions);
@@ -251,8 +269,29 @@ export default function App() {
         }
       }
 
+      // Stage 2: When exactly 2 full convo rounds complete (2 user + 2 bot = 4 messages)
+      let finalTitle = sessionTitle;
+      if (finalMessages.length === 4) {
+        try {
+          const titleRes = await fetch("/api/title", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: finalMessages }),
+          });
+          if (titleRes.ok) {
+            const titleData = await titleRes.json();
+            if (titleData.title && titleData.title !== "Research Inquiry") {
+              finalTitle = titleData.title;
+              setChatTitle(finalTitle);
+            }
+          }
+        } catch (e) {
+          console.warn("Auto-title summary failed:", e);
+        }
+      }
+
       updatedSessions = updatedSessions.map((s) =>
-        s.id === activeId ? { ...s, messages: finalMessages } : s
+        s.id === activeId ? { ...s, messages: finalMessages, title: finalTitle } : s
       );
       saveSessionsToStorage(updatedSessions);
     } catch (err) {
@@ -285,6 +324,8 @@ export default function App() {
         theme={theme}
         onToggleTheme={toggleTheme}
         hasActiveResearch={Boolean(activeResearchData)}
+        chatTitle={chatTitle}
+        onDoubleClickHeader={() => setSidebarOpen((prev) => !prev)}
       />
 
       {/* App Stage & Shell with 3-Column Studio Grid */}

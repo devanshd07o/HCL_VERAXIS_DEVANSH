@@ -41,10 +41,10 @@ export default function LiquidLensCanvas({ isHovered, mousePos, theme = "dark" }
     float getLiquidSdf(vec2 p, vec2 center, vec2 halfSize) {
       vec2 pRel = p - center;
       
-      // Super-oval power 2.5: continuous liquid curvature without a single rigid corner
+      // Super-oval power 3.6: continuous squarish-round curvature matching rounded-2xl geometry
       float nx = abs(pRel.x) / max(halfSize.x, 1.0);
       float ny = abs(pRel.y) / max(halfSize.y, 1.0);
-      float baseDist = pow(pow(nx, 2.5) + pow(ny, 2.5), 1.0 / 2.5) - 1.0;
+      float baseDist = pow(pow(nx, 3.6) + pow(ny, 3.6), 1.0 / 3.6) - 1.0;
 
       // Gentle capillary surface tension wave
       float angle = atan(pRel.y, pRel.x);

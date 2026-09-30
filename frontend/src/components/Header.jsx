@@ -1,5 +1,15 @@
 import React from "react";
-import { Menu, Settings, Sun, Moon, Sparkles, PanelRightClose, PanelRightOpen } from "lucide-react";
+import {
+  Menu,
+  Settings,
+  Sun,
+  Moon,
+  Sparkles,
+  PanelRightClose,
+  PanelRightOpen,
+  PanelLeftClose,
+  PanelLeftOpen
+} from "lucide-react";
 
 export default function Header({
   sidebarOpen,
@@ -10,20 +20,30 @@ export default function Header({
   theme,
   onToggleTheme,
   hasActiveResearch = false,
+  chatTitle = "New Chat",
+  onDoubleClickHeader,
 }) {
   return (
-    <header className="fixed top-0 left-0 right-0 h-14 px-3 sm:px-5 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-xl border-b border-[var(--glass-border)] transition-colors duration-300">
-      {/* Brand Anchor & Left Sidebar Toggle */}
-      <div className="flex items-center gap-2.5">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-          title="Toggle Navigation Sidebar (Ctrl+B)"
-        >
-          <Menu className="w-4 h-4 opacity-80" />
-        </button>
+    <header
+      onDoubleClick={onDoubleClickHeader}
+      className="fixed top-0 left-0 right-0 h-14 px-3 sm:px-5 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-2xl border-b border-[var(--glass-border)] transition-colors duration-300 select-none"
+    >
+      {/* Brand Anchor & Left Sidebar Toggle (Symbols Only + Hover Pill) */}
+      <div className="flex items-center gap-2">
+        <HoverPill text={sidebarOpen ? "Collapse Navigation (Ctrl+B)" : "Expand Navigation (Ctrl+B)"}>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+          >
+            {sidebarOpen ? (
+              <PanelLeftClose className="w-4 h-4 opacity-80" />
+            ) : (
+              <PanelLeftOpen className="w-4 h-4 opacity-80" />
+            )}
+          </button>
+        </HoverPill>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 ml-1">
           <div className="relative flex items-center">
             <img
               src="/assets/veraxis_logo.png"
@@ -32,73 +52,87 @@ export default function Header({
             />
             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-[var(--bg-app)] animate-pulse" />
           </div>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[15.5px] tracking-tight text-[var(--text-main)]">
-              VERAXIS AI
-            </span>
-            <span className="hidden sm:inline-flex text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-[var(--highlight-bg)] text-[var(--accent-cyan)] border border-[var(--glass-border)]">
-              SaaS Pro
-            </span>
-          </div>
+          <span className="font-extrabold text-[15.5px] tracking-tight text-[var(--text-main)] hidden xs:inline">
+            VERAXIS
+          </span>
         </div>
       </div>
 
-      {/* Center Status Pill */}
-      <div className="hidden lg:flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[12px] font-medium text-[var(--text-muted)]">
-        <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)] animate-pulse" />
-        <span className="text-[var(--text-main)] font-normal opacity-90">
-          Autonomous Multi-Agent Engine Online
-        </span>
-        <span className="text-[var(--glass-border)]">|</span>
-        <span className="text-[var(--accent-cyan)] text-[11px] font-mono">41 Keys Pool</span>
+      {/* Center Dynamic AI Chat Title Pill (Renames 2 times) */}
+      <div className="flex-1 flex justify-center px-2 max-w-[500px]">
+        <HoverPill text="Active Chat Topic (Auto-summarized by AI)">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--island-bg)] border border-[var(--glass-border)] shadow-xs transition-all max-w-[220px] sm:max-w-[360px] md:max-w-[420px] cursor-default">
+            <Sparkles className="w-3.5 h-3.5 text-[var(--accent-cyan)] shrink-0 animate-pulse-subtle" />
+            <span className="text-[12.5px] sm:text-[13px] font-semibold text-[var(--text-main)] truncate tracking-tight">
+              {chatTitle || "New Chat"}
+            </span>
+          </div>
+        </HoverPill>
       </div>
 
-      {/* Right Actions */}
-      <div className="flex items-center gap-2">
-        {/* Theme Toggle */}
-        <button
-          onClick={onToggleTheme}
-          className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-          title={`Switch to ${theme === "dark" ? "Light" : "Dark"} Mode`}
-        >
-          {theme === "dark" ? (
-            <Sun className="w-4 h-4 text-amber-400" />
-          ) : (
-            <Moon className="w-4 h-4 text-slate-700" />
-          )}
-        </button>
+      {/* Right Actions: Symbols Only with Premium Hover Pills */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Theme Toggle Symbol */}
+        <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"}>
+          <button
+            onClick={onToggleTheme}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-4 h-4 text-amber-400" />
+            ) : (
+              <Moon className="w-4 h-4 text-slate-700" />
+            )}
+          </button>
+        </HoverPill>
 
-        {/* Preferences Modal Trigger */}
-        <button
-          onClick={onOpenSettings}
-          className="w-9 h-9 sm:w-auto sm:px-3 rounded-xl flex items-center justify-center gap-1.5 bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all text-[13px] font-medium cursor-pointer"
-          title="Open Preferences"
-        >
-          <Settings className="w-3.5 h-3.5 opacity-80" />
-          <span className="hidden sm:inline">Settings</span>
-        </button>
+        {/* Preferences / Settings Symbol */}
+        <HoverPill text="Preferences & Settings">
+          <button
+            onClick={onOpenSettings}
+            className="w-9 h-9 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+          >
+            <Settings className="w-4 h-4 opacity-80" />
+          </button>
+        </HoverPill>
 
-        {/* Right Research Inspector Drawer Toggle (Zerneza Style) */}
-        <button
-          onClick={() => setRightPanelOpen(!rightPanelOpen)}
-          className={`h-9 px-3 rounded-xl flex items-center gap-1.5 border transition-all text-[13px] font-medium cursor-pointer ${
-            rightPanelOpen
-              ? "bg-[var(--highlight-bg)] border-[var(--accent-cyan)]/40 text-[var(--accent-cyan)] shadow-xs"
-              : "bg-[var(--glass-surface-subtle)] border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)]"
-          }`}
-          title="Toggle Research Inspector Drawer"
-        >
-          {rightPanelOpen ? (
-            <PanelRightClose className="w-4 h-4" />
-          ) : (
-            <PanelRightOpen className="w-4 h-4" />
-          )}
-          <span className="hidden md:inline">Inspector</span>
-          {hasActiveResearch && (
-            <span className="w-2 h-2 rounded-full bg-[var(--accent-cyan)] animate-ping" />
-          )}
-        </button>
+        {/* Research Inspector Drawer Symbol */}
+        <HoverPill text={rightPanelOpen ? "Close Inspector (Ctrl+I)" : "Open Research Inspector (Ctrl+I)"}>
+          <button
+            onClick={() => setRightPanelOpen(!rightPanelOpen)}
+            className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
+              rightPanelOpen
+                ? "bg-[var(--highlight-bg)] border-[var(--accent-cyan)]/40 text-[var(--accent-cyan)] shadow-xs"
+                : "bg-[var(--glass-surface-subtle)] border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)]"
+            }`}
+          >
+            {rightPanelOpen ? (
+              <PanelRightClose className="w-4 h-4" />
+            ) : (
+              <PanelRightOpen className="w-4 h-4" />
+            )}
+            {hasActiveResearch && !rightPanelOpen && (
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[var(--accent-cyan)] ring-2 ring-[var(--bg-app)] animate-pulse" />
+            )}
+          </button>
+        </HoverPill>
       </div>
     </header>
+  );
+}
+
+// Standard Premium Hover Pill (Tooltip Component)
+function HoverPill({ children, text }) {
+  if (!text) return children;
+
+  return (
+    <div className="relative group flex items-center justify-center">
+      {children}
+      <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out px-2.5 py-1 rounded-lg bg-[var(--island-bg)] text-[var(--text-main)] text-[11px] font-semibold border border-[var(--glass-border)] shadow-xl whitespace-nowrap backdrop-blur-2xl">
+        {text}
+        {/* Soft triangular arrow pointer */}
+        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[var(--island-bg)] border-t border-l border-[var(--glass-border)]" />
+      </div>
+    </div>
   );
 }

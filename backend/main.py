@@ -82,6 +82,9 @@ if os.path.exists(WEB_DIR):
 class ChatRequest(BaseModel):
     query: str
 
+class TitleRequest(BaseModel):
+    messages: List[Dict[str, Any]]
+
 
 # ============================================================================
 # Core Frontend & PWA Endpoints
@@ -192,6 +195,45 @@ RESEARCH_TOPICS_POOL = [
 async def get_suggestions():
     """Returns exactly 2 randomized cutting-edge empirical research topics for dynamic UI pills."""
     return random.sample(RESEARCH_TOPICS_POOL, 2)
+
+
+@app.post("/api/title")
+async def generate_title_endpoint(req: TitleRequest):
+    """
+    Summarizes conversation history into a very short, punchy 2-4 word executive title
+    for the central header.
+    """
+    try:
+        from backend.router import get_groq_client
+        client = get_groq_client()
+
+        dialogue = []
+        for m in req.messages[-4:]:
+            role = m.get("role", "user")
+            content = str(m.get("content", ""))[:250]
+            dialogue.append(f"{role}: {content}")
+        text_payload = "\n".join(dialogue)
+
+        prompt = (
+            "Summarize this conversation into a VERY SHORT, punchy, high-impact title "
+            "of EXACTLY 2 to 4 words (no quotes, no punctuation):\n\n"
+            f"{text_payload}\n\nTitle:"
+        )
+
+        response = client.chat.completions.create(
+            model=key_manager.fast_model,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1,
+            max_tokens=20
+        )
+        raw = response.choices[0].message.content.strip().strip('"\'')
+        cleaned = re.sub(r'[^\w\s-]', '', raw).strip()
+        words = cleaned.split()
+        if len(words) > 4:
+            cleaned = " ".join(words[:4])
+        return {"title": cleaned or "Research Inquiry"}
+    except Exception:
+        return {"title": "Active Research"}
 
 
 # ============================================================================

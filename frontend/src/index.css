@@ -107,6 +107,22 @@ html, body {
   color: var(--text-main);
   transition: background-color 0.3s ease, color 0.3s ease;
   -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(56, 189, 248, 0.14), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 90% 95%, rgba(99, 102, 241, 0.12), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 10% 85%, rgba(168, 85, 247, 0.09), transparent 60%);
+}
+
+[data-theme="light"] body {
+  background-image: 
+    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(2, 132, 199, 0.10), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 90% 95%, rgba(99, 102, 241, 0.08), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 10% 85%, rgba(236, 72, 153, 0.06), transparent 60%);
+}
+
+/* Squarish Round Text Box Pill Geometry */
+.liquid-glass-input {
+  border-radius: 20px !important;
 }
 
 /* ============================================================================
