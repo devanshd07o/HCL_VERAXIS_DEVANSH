@@ -111,8 +111,8 @@ export default function HomepagePortal({
   onChange,
   onSend,
   disabled,
-  mode = "deep",
-  setMode,
+  researchActive = true,
+  setResearchActive,
   theme = "dark",
   onSelectTopic,
   onOpenConsole,
@@ -184,7 +184,7 @@ export default function HomepagePortal({
           if (onSelectTopic) onSelectTopic(currentPreprint.title);
           else {
             onChange(currentPreprint.title);
-            onSend(currentPreprint.title, "deep");
+            onSend(currentPreprint.title, true);
           }
         }}
         className="w-full flex items-center justify-between gap-3 px-3.5 py-2 rounded-xl bg-[var(--glass-surface-subtle)] border border-[var(--island-border)] text-[11.5px] font-mono text-[var(--text-muted)] hover:border-[var(--accent-primary)]/40 hover:text-[var(--text-main)] transition-all cursor-pointer group shadow-xs"
@@ -217,8 +217,8 @@ export default function HomepagePortal({
           onChange={onChange}
           onSend={onSend}
           disabled={disabled}
-          mode={mode}
-          setMode={setMode}
+          researchActive={researchActive}
+          setResearchActive={setResearchActive}
           variant="workbench"
           theme={theme}
         />

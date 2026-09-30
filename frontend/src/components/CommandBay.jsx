@@ -18,8 +18,8 @@ export default function CommandBay({
   onSend,
   disabled,
   placeholder,
-  mode = "deep",
-  setMode,
+  researchActive = true,
+  setResearchActive,
   variant = "workbench", // "workbench" | "dock"
   theme = "dark",
 }) {
@@ -128,7 +128,7 @@ export default function CommandBay({
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      onSend(value, mode);
+      onSend(value, researchActive);
     }
   };
 
@@ -153,51 +153,40 @@ export default function CommandBay({
           : "rounded-xl p-2.5 sm:p-3 bg-white border border-black/[0.09] shadow-[0_10px_24px_-6px_rgba(0,0,0,0.05)]"
       }`}
     >
-      {/* Top Console Deck: Dual Rocker Mode Switcher */}
+      {/* Top Console Deck: Research Priority & Intent Classifier Beacon */}
       <div className="flex items-center justify-between gap-3 pb-2 mb-1.5 border-b border-[var(--island-border)]">
-        {/* Tactile Mode Rocker */}
-        <div className={`inline-flex p-0.5 sm:p-1 rounded-xl border ${isDark ? "bg-[#0B0C10] border-white/[0.07]" : "bg-[#F0F2F6] border-black/[0.06]"}`}>
+        {/* Research Priority Button */}
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setMode?.("deep")}
-            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg text-[11.5px] font-mono font-semibold transition-all cursor-pointer ${
-              mode === "deep"
+            onClick={() => setResearchActive?.((prev) => !prev)}
+            className={`flex items-center gap-2 px-3 py-1 rounded-xl text-[12px] font-mono font-semibold transition-all cursor-pointer ${
+              researchActive
                 ? isDark
-                  ? "bg-[#161B29] text-[var(--accent-primary)] border border-[var(--accent-primary)]/40 shadow-xs"
-                  : "bg-white text-[var(--accent-primary)] border border-black/[0.08] shadow-xs"
-                : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
+                  ? "bg-[var(--highlight-bg)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/40 shadow-xs"
+                  : "bg-blue-50 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30 shadow-xs"
+                : "bg-white/[0.03] text-[var(--text-muted)] border border-white/[0.06] hover:text-[var(--text-main)]"
             }`}
+            title="Toggle Research Priority (Intent Classifier prioritizes scientific synthesis when active)"
           >
-            <Compass className="w-3.5 h-3.5" />
-            <span>CrewAI Deep Swarm</span>
-            <span className={`hidden sm:inline text-[9.5px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[var(--accent-primary)]" : "bg-black/[0.05] text-[var(--accent-primary)]"}`}>
-              ~12s
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMode?.("fast")}
-            className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg text-[11.5px] font-mono font-semibold transition-all cursor-pointer ${
-              mode === "fast"
+            <Compass className={`w-3.5 h-3.5 ${researchActive ? "text-[var(--accent-primary)] animate-pulse" : ""}`} />
+            <span>Research Priority</span>
+            <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-mono ${
+              researchActive
                 ? isDark
-                  ? "bg-[#161B29] text-[var(--accent-primary)] border border-[var(--accent-primary)]/40 shadow-xs"
-                  : "bg-white text-[var(--accent-primary)] border border-black/[0.08] shadow-xs"
-                : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
-            }`}
-          >
-            <Zap className="w-3.5 h-3.5" />
-            <span>Rapid Synthesis</span>
-            <span className={`hidden sm:inline text-[9.5px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[var(--accent-primary)]" : "bg-black/[0.05] text-[var(--accent-primary)]"}`}>
-              &lt;400ms
+                  ? "bg-black/40 text-[var(--accent-primary)]"
+                  : "bg-white text-[var(--accent-primary)]"
+                : "bg-white/[0.05] text-[var(--text-muted)]"
+            }`}>
+              {researchActive ? "Active" : "Auto"}
             </span>
           </button>
         </div>
 
         {/* Engine Status Beacon */}
-        <div className="hidden xs:flex items-center gap-1.5 text-[11px] font-mono text-[var(--text-muted)]">
+        <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)]">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[var(--text-muted)] opacity-80">Swarm Ready</span>
+          <span className="hidden xs:inline text-[var(--text-muted)] opacity-85">Intent Classifier Active</span>
         </div>
       </div>
 
@@ -265,7 +254,7 @@ export default function CommandBay({
           {/* Execute Directive Button */}
           <button
             type="button"
-            onClick={() => onSend(value, mode)}
+            onClick={() => onSend(value, researchActive)}
             disabled={disabled || !value.trim() || isEnhancing}
             className="h-8 px-3.5 rounded-lg flex items-center gap-1.5 bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer font-bold shadow-xs text-[12px]"
           >

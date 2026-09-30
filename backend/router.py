@@ -48,9 +48,8 @@ def classify_query_intent(query: str, chat_history: List[Dict[str, str]] = None)
     client = get_groq_client()
     system_prompt = (
         "You are the VERAXIS AI Autonomous Intent Classifier.\n"
-        "Analyze the user query and classify it into:\n"
-        "- 'GENERAL_CHAT': Casual greetings, personal questions, simple facts, quick code fixes, conversational banter.\n"
-        "- 'DEEP_RESEARCH': Complex scientific topics, commercial feasibility, empirical benchmarks, market analysis, paper reviews, future forecasts.\n\n"
+        "Analyze the user query. PRIORITIZE 'DEEP_RESEARCH' for ANY question that is researchable: scientific topics, engineering, technical mechanisms, quantitative parameters, academic questions, comparative evaluations, technology benchmarks, or domain hypotheses.\n"
+        "Only classify as 'GENERAL_CHAT' if the query is purely casual greeting, conversational pleasantry, or brief non-technical banter.\n\n"
         "Respond ONLY with valid JSON (no markdown formatting, no code block backticks):\n"
         '{"intent": "GENERAL_CHAT" | "DEEP_RESEARCH", "extracted_topic": "topic string", "confidence": 0.95, "reasoning": "brief rationale"}'
     )
@@ -74,22 +73,57 @@ def classify_query_intent(query: str, chat_history: List[Dict[str, str]] = None)
     except Exception:
         pass
 
-    # Heuristic fallback for scientific & empirical queries
+    # Heuristic fallback for scientific & empirical queries (High Priority for Research)
     research_indicators = [
         "commercial", "viability", "benchmark", "paper", "arxiv",
         "quantum", "battery", "feasibility", "versus", "vs", "forecast",
         "solid-state", "pqc", "neuromorphic", "empirical", "comparison",
         "density", "electrolyte", "superconductor", "cryptography", "clinical trial",
-        "crispr", "perovskite", "fusion", "photovoltaic", "algorithm", "bandwidth"
+        "crispr", "perovskite", "fusion", "photovoltaic", "algorithm", "bandwidth",
+        "mechanism", "physics", "chemistry", "model", "analysis", "system", "rate",
+        "how does", "what is the mechanism", "difference", "study", "research"
     ]
-    is_deep = any(term in clean_q for term in research_indicators)
+    is_deep = any(term in clean_q for term in research_indicators) or len(clean_q.split()) >= 4
     
     return {
         "intent": "DEEP_RESEARCH" if is_deep else "GENERAL_CHAT",
         "extracted_topic": query,
-        "confidence": 0.85,
-        "reasoning": "Scientific marker detection"
+        "confidence": 0.90,
+        "reasoning": "Scientific marker and structural analysis (Research Priority)"
     }
+
+
+def rephrase_query_for_research(query: str) -> Dict[str, str]:
+    """
+    Rephrases and expands user query into an authoritative, information-dense
+    academic research directive with specific arXiv domain keywords.
+    """
+    client = get_groq_client()
+    system_instruction = (
+        "You are an elite scientific research prompt engineer for multi-agent CrewAI synthesis. "
+        "Transform the user's inquiry into an authoritative, deeply structured scientific research inquiry of 1 to 2 complete sentences "
+        "with precise technical and domain terminology, plus 4-6 academic search keywords. "
+        "Output JSON ONLY: {\"enhanced_query\": \"...\", \"search_keywords\": \"...\"}"
+    )
+    try:
+        response = client.chat.completions.create(
+            model=key_manager.fast_model,
+            messages=[
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": query}
+            ],
+            temperature=0.2,
+            max_tokens=250
+        )
+        content = response.choices[0].message.content.strip()
+        json_match = re.search(r'\{.*\}', content, re.DOTALL)
+        if json_match:
+            data = json.loads(json_match.group(0))
+            if "enhanced_query" in data:
+                return data
+    except Exception:
+        pass
+    return {"enhanced_query": query, "search_keywords": query}
 
 def generate_fast_chat_response(messages: List[Dict[str, str]]) -> str:
     """

@@ -84,6 +84,15 @@ if os.path.exists(WEB_DIR):
 class ChatRequest(BaseModel):
     query: str
     mode: str = "auto"
+    enhanced_query: str = None
+    search_keywords: str = None
+    force_research: bool = False
+
+class ClassifyRequest(BaseModel):
+    query: str
+
+class RephraseRequest(BaseModel):
+    query: str
 
 class TitleRequest(BaseModel):
     messages: List[Dict[str, Any]]
@@ -309,6 +318,31 @@ async def get_suggestions():
     return random.sample(RESEARCH_TOPICS_POOL, 2)
 
 
+@app.post("/api/classify")
+async def classify_query_endpoint(req: ClassifyRequest):
+    """
+    Step 1: Evaluates user query intent with high priority given to DEEP_RESEARCH
+    for scientific/technical topics, and GENERAL_CHAT for casual banter.
+    """
+    clean_q = req.query.strip()
+    if not clean_q:
+        return {"intent": "GENERAL_CHAT", "extracted_topic": "", "confidence": 1.0, "reasoning": "Empty query"}
+    return classify_query_intent(clean_q)
+
+
+@app.post("/api/rephrase")
+async def rephrase_query_endpoint(req: RephraseRequest):
+    """
+    Step 2: Rephrases research query to maximize academic precision,
+    extracting taxonomical concepts and arXiv search keywords.
+    """
+    clean_q = req.query.strip()
+    if not clean_q:
+        return {"enhanced_query": "", "search_keywords": ""}
+    from backend.router import rephrase_query_for_research
+    return rephrase_query_for_research(clean_q)
+
+
 @app.post("/api/title")
 async def generate_title_endpoint(req: TitleRequest):
     """
@@ -464,60 +498,51 @@ async def chat_endpoint(req: ChatRequest):
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
     # 1. High-Precision Intent Classification with explicit override
-    if req.mode == "fast":
-        intent = "GENERAL_CHAT"
-        extracted_topic = user_query
-    elif req.mode == "deep":
+    if req.force_research or req.mode == "deep":
         intent = "DEEP_RESEARCH"
+        extracted_topic = user_query
+    elif req.mode == "fast":
+        intent = "GENERAL_CHAT"
         extracted_topic = user_query
     else:
         intent_data = classify_query_intent(user_query)
-        intent = intent_data.get("intent", "GENERAL_CHAT")
+        intent = intent_data.get("intent", "DEEP_RESEARCH")
         extracted_topic = intent_data.get("extracted_topic", user_query)
 
-    # Internal Query Auto-Enhancement for Deep Research
-    enhanced_directive = user_query
-    if intent == "DEEP_RESEARCH":
+    # 2. Query Rephrasing & Academic Taxonomy Expansion for Deep Research
+    enhanced_directive = req.enhanced_query or user_query
+    if intent == "DEEP_RESEARCH" and not req.enhanced_query:
         try:
-            from backend.router import get_groq_client
-            client = get_groq_client()
-            if len(user_query.split()) < 15:
-                enh_res = client.chat.completions.create(
+            from backend.router import rephrase_query_for_research
+            rephrased = rephrase_query_for_research(user_query)
+            enhanced_directive = rephrased.get("enhanced_query", user_query)
+            if not req.search_keywords and "search_keywords" in rephrased:
+                req.search_keywords = rephrased["search_keywords"]
+        except Exception:
+            enhanced_directive = user_query
+
+        if req.search_keywords:
+            extracted_topic = f"{user_query} {req.search_keywords}"
+        else:
+            try:
+                from backend.router import get_groq_client
+                client = get_groq_client()
+                rephrase_res = client.chat.completions.create(
                     model=key_manager.fast_model,
                     messages=[
                         {
                             "role": "system",
-                            "content": "You are an elite scientific research prompt engineer for multi-agent CrewAI synthesis. Transform the user's inquiry into an authoritative, information-dense research question with precise domain terminology. Return ONLY the enhanced query text in 1-2 dense sentences."
+                            "content": "Extract 4 to 8 precise academic search keywords from this scientific topic for preprint databases. Output only space-separated keywords."
                         },
-                        {"role": "user", "content": user_query}
+                        {"role": "user", "content": enhanced_directive}
                     ],
-                    max_tokens=150,
+                    max_tokens=40,
                     temperature=0.2
                 )
-                enhanced_cand = enh_res.choices[0].message.content.strip().strip('"\'')
-                if enhanced_cand and len(enhanced_cand) > len(user_query):
-                    enhanced_directive = enhanced_cand
-        except Exception:
-            pass
-
-        # Also extract search keywords for arXiv
-        try:
-            rephrase_res = client.chat.completions.create(
-                model=key_manager.fast_model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Extract 4 to 8 precise academic search keywords from this scientific topic for preprint databases. Output only space-separated keywords."
-                    },
-                    {"role": "user", "content": enhanced_directive}
-                ],
-                max_tokens=40,
-                temperature=0.2
-            )
-            expanded_keywords = rephrase_res.choices[0].message.content.strip()
-            extracted_topic = f"{user_query} {expanded_keywords}"
-        except Exception:
-            extracted_topic = user_query
+                expanded_keywords = rephrase_res.choices[0].message.content.strip()
+                extracted_topic = f"{user_query} {expanded_keywords}"
+            except Exception:
+                extracted_topic = user_query
 
     # BRANCH A: CASUAL / INSTANT CONVERSATIONAL QUERY
     if intent == "GENERAL_CHAT":

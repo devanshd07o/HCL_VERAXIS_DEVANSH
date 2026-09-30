@@ -63,12 +63,8 @@ export default function App() {
   }, [chatWidth]);
 
   // Layout Panels state (Left & Right)
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window !== "undefined") {
-      return window.innerWidth >= 1024;
-    }
-    return false;
-  });
+  // Initial app load: Left sidebar is collapsed by default as requested
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [activeResearchData, setActiveResearchData] = useState(null);
   const [chatTitle, setChatTitle] = useState("New Chat");
@@ -76,7 +72,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [executionMode, setExecutionMode] = useState("deep");
+  const [researchActive, setResearchActive] = useState(true);
 
   // Dynamic AI Suggestions state (2 fresh topics)
   const [dynamicSuggestions, setDynamicSuggestions] = useState([
@@ -200,12 +196,14 @@ export default function App() {
     }
   }, [messages, isLoading]);
 
-  // Send Query Handler with 2-Stage AI Title Renaming
-  const handleSendQuery = async (queryText, modeOverride) => {
+  // Send Query Handler with Multi-Step Intent Classification & Rephrasing Pipeline
+  const handleSendQuery = async (queryText, forceResearchParam) => {
     const text = (queryText || inputValue).trim();
     if (!text || isLoading) return;
 
-    const activeMode = modeOverride || executionMode;
+    const isResearchPriority =
+      forceResearchParam !== undefined ? Boolean(forceResearchParam) : researchActive;
+
     setInputValue("");
     setIsLoading(true);
 
@@ -250,19 +248,69 @@ export default function App() {
     saveSessionsToStorage(updatedSessions);
 
     try {
+      // Step 1: Autonomous Intent Classification API Call
+      let intent = "DEEP_RESEARCH";
+      try {
+        const classifyRes = await fetch("/api/classify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ query: text }),
+        });
+        if (classifyRes.ok) {
+          const classifyData = await classifyRes.json();
+          intent = classifyData.intent || "DEEP_RESEARCH";
+        }
+      } catch (classifyErr) {
+        console.warn("Classification fallback:", classifyErr);
+      }
+
+      // Prioritize research if researchable, otherwise route casual queries to fast chat
+      const isResearch = isResearchPriority
+        ? intent === "DEEP_RESEARCH" || (intent !== "GENERAL_CHAT" && words.length > 2)
+        : intent === "DEEP_RESEARCH";
+
+      let enhancedQuery = text;
+      let searchKeywords = "";
+
+      // Step 2: Query Rephrasing & Taxonomy Extraction API Call
+      if (isResearch) {
+        try {
+          const rephraseRes = await fetch("/api/rephrase", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query: text }),
+          });
+          if (rephraseRes.ok) {
+            const rephraseData = await rephraseRes.json();
+            enhancedQuery = rephraseData.enhanced_query || text;
+            searchKeywords = rephraseData.search_keywords || "";
+          }
+        } catch (rephraseErr) {
+          console.warn("Rephrase fallback:", rephraseErr);
+        }
+      }
+
+      // Step 3: Main Research / Chat Search API Call
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: text, mode: activeMode }),
+        body: JSON.stringify({
+          query: text,
+          mode: isResearch ? "deep" : "fast",
+          enhanced_query: enhancedQuery,
+          search_keywords: searchKeywords,
+          force_research: isResearch,
+        }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const data = await res.json();
 
+      // Step 4: Output stored in buffer and revealed via typewriter stream
       const botMsg = {
         role: "bot",
         content: data.content,
-        type: data.type || "chat",
+        type: data.type || (isResearch ? "research" : "chat"),
         sources: data.sources || [],
         pdf_filename: data.pdf_filename || null,
         topic: data.topic || null,
@@ -395,14 +443,14 @@ export default function App() {
                 onSend={handleSendQuery}
                 disabled={isLoading}
                 suggestions={dynamicSuggestions}
-                mode={executionMode}
-                setMode={setExecutionMode}
+                researchActive={researchActive}
+                setResearchActive={setResearchActive}
                 theme={theme}
                 onOpenConsole={() => setForceConsoleView(true)}
                 onSelectTopic={(topicQuery) => {
                   setInputValue(topicQuery);
                   setForceConsoleView(true);
-                  handleSendQuery(topicQuery, "deep");
+                  handleSendQuery(topicQuery, true);
                 }}
               />
             </div>
@@ -433,8 +481,8 @@ export default function App() {
                     onChange={setInputValue}
                     onSend={handleSendQuery}
                     disabled={isLoading}
-                    mode={executionMode}
-                    setMode={setExecutionMode}
+                    researchActive={researchActive}
+                    setResearchActive={setResearchActive}
                     variant="dock"
                     theme={theme}
                   />
