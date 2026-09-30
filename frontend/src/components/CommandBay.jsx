@@ -163,14 +163,14 @@ export default function CommandBay({
             className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg text-[11.5px] font-mono font-semibold transition-all cursor-pointer ${
               mode === "deep"
                 ? isDark
-                  ? "bg-[#1C1F2B] text-[#FF5C00] border border-[#FF5C00]/40 shadow-xs"
-                  : "bg-white text-[#E04F00] border border-black/[0.08] shadow-xs"
+                  ? "bg-[#161B29] text-[var(--accent-primary)] border border-[var(--accent-primary)]/40 shadow-xs"
+                  : "bg-white text-[var(--accent-primary)] border border-black/[0.08] shadow-xs"
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
             }`}
           >
             <Compass className="w-3.5 h-3.5" />
             <span>CrewAI Deep Swarm</span>
-            <span className={`hidden sm:inline text-[9.5px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[#FF5C00]/90" : "bg-black/[0.05] text-[#E04F00]"}`}>
+            <span className={`hidden sm:inline text-[9.5px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[var(--accent-primary)]" : "bg-black/[0.05] text-[var(--accent-primary)]"}`}>
               ~12s
             </span>
           </button>
@@ -181,14 +181,14 @@ export default function CommandBay({
             className={`flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-lg text-[11.5px] font-mono font-semibold transition-all cursor-pointer ${
               mode === "fast"
                 ? isDark
-                  ? "bg-[#1C1F2B] text-[#FF5C00] border border-[#FF5C00]/40 shadow-xs"
-                  : "bg-white text-[#E04F00] border border-black/[0.08] shadow-xs"
+                  ? "bg-[#161B29] text-[var(--accent-primary)] border border-[var(--accent-primary)]/40 shadow-xs"
+                  : "bg-white text-[var(--accent-primary)] border border-black/[0.08] shadow-xs"
                 : "text-[var(--text-muted)] hover:text-[var(--text-main)]"
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
             <span>Rapid Synthesis</span>
-            <span className={`hidden sm:inline text-[9.5px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[#FF5C00]/90" : "bg-black/[0.05] text-[#E04F00]"}`}>
+            <span className={`hidden sm:inline text-[9.5px] px-1 py-0.2 rounded font-mono ${isDark ? "bg-black/50 text-[var(--accent-primary)]" : "bg-black/[0.05] text-[var(--accent-primary)]"}`}>
               &lt;400ms
             </span>
           </button>

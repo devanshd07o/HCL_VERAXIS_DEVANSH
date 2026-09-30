@@ -49,14 +49,14 @@ export default function Header({
           />
         </div>
 
-        {/* If inside active dossier, show Return to Mission Control button */}
+        {/* If inside active dossier or console, show Return to Portal button */}
         {!isInitialMode && (
           <button
             onClick={onReturnHome}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] transition-all cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Mission Control</span>
+            <span>Back to Portal</span>
           </button>
         )}
       </div>

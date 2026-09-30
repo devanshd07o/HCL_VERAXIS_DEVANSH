@@ -151,9 +151,12 @@ export default function App() {
     }
   };
 
+  const [forceConsoleView, setForceConsoleView] = useState(false);
+
   const handleNewSession = () => {
     setCurrentSessionId(null);
     setMessages([]);
+    setForceConsoleView(false);
     setInputValue("");
     setChatTitle("New Chat");
     setActiveResearchData(null);
@@ -314,7 +317,7 @@ export default function App() {
     }
   };
 
-  const isInitialMode = messages.length === 0;
+  const isInitialMode = messages.length === 0 && !forceConsoleView;
 
   return (
     <div className="relative w-screen h-[100dvh] max-h-[100dvh] overflow-hidden flex flex-col bg-[var(--bg-app)] text-[var(--text-main)] transition-colors duration-300">
@@ -385,7 +388,7 @@ export default function App() {
         >
           {isInitialMode ? (
             /* MISSION CONTROL HOMEPAGE WORKBENCH */
-            <div className="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 overflow-y-auto stage-scroll-container">
+            <div className="flex-1 flex flex-col items-center justify-start p-2 sm:p-4 overflow-y-auto stage-scroll-container">
               <HomepagePortal
                 value={inputValue}
                 onChange={setInputValue}
@@ -395,8 +398,10 @@ export default function App() {
                 mode={executionMode}
                 setMode={setExecutionMode}
                 theme={theme}
+                onOpenConsole={() => setForceConsoleView(true)}
                 onSelectTopic={(topicQuery) => {
                   setInputValue(topicQuery);
+                  setForceConsoleView(true);
                   handleSendQuery(topicQuery, "deep");
                 }}
               />

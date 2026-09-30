@@ -42,6 +42,20 @@ export default function ChatStream({
 
   return (
     <div className={`w-full ${widthClass} mx-auto px-2 sm:px-4 py-4 flex flex-col gap-6`}>
+      {messages.length === 0 && !isLoading && (
+        <div className="w-full py-20 flex flex-col items-center justify-center text-center gap-3 animate-buttery-fade-in select-none">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--highlight-bg)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] flex items-center justify-center shadow-xs">
+            <Cpu className="w-6 h-6 animate-pulse" />
+          </div>
+          <h2 className="text-[17px] font-bold text-[var(--text-main)]">
+            CrewAI Research Console Active
+          </h2>
+          <p className="text-[13px] text-[var(--text-muted)] max-w-[460px] leading-relaxed">
+            Enter a scientific research query, technical hypothesis, or click Enhance below to formulate an empirical monograph directive.
+          </p>
+        </div>
+      )}
+
       {messages.map((msg, idx) => {
         const isLatestBot = msg.role === "bot" && idx === messages.length - 1;
         const alreadyTyped = typedMessageIndices.has(idx);

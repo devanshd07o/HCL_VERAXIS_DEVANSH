@@ -2,80 +2,80 @@
 @import "tailwindcss";
 
 :root {
-  /* TACTILE SMOKED TITANIUM & SIGNAL AMBER (Dark Mode Default) */
-  --bg-app: #0B0C10;
-  --island-bg: #13151D;
+  /* LUXURY SCIENTIFIC OBSIDIAN & ELECTRIC COBALT (Dark Default) */
+  --bg-app: #08090D;
+  --island-bg: #0F121A;
   --island-border: rgba(255, 255, 255, 0.08);
-  --island-shadow: 0 20px 48px -12px rgba(0, 0, 0, 0.65), 0 4px 14px rgba(0, 0, 0, 0.35);
+  --island-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.40);
   
-  --glass-surface: #13151D;
-  --glass-surface-subtle: #1A1D27;
+  --glass-surface: #0F121A;
+  --glass-surface-subtle: #161A26;
   --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 16px 36px rgba(0, 0, 0, 0.50);
-  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.05);
+  --glass-shadow: 0 20px 40px rgba(0, 0, 0, 0.55);
+  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.06);
   
-  --text-main: #F4F4F6;
-  --text-muted: #8E909D;
-  --accent-cyan: #FF5C00;
-  --accent-primary: #FF5C00;
-  --accent-blue: #3B82F6;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --accent-cyan: #38BDF8;
+  --accent-primary: #3B82F6;
+  --accent-blue: #2563EB;
   --accent-indigo: #6366F1;
   --accent-emerald: #10B981;
-  --accent-amber: #FF5C00;
+  --accent-amber: #F59E0B;
   
-  --sidebar-bg: #101218;
-  --input-dock-bg: #13151D;
+  --sidebar-bg: #0B0E14;
+  --input-dock-bg: #0F121A;
   --input-border: rgba(255, 255, 255, 0.10);
-  --input-border-hover: rgba(255, 92, 0, 0.40);
-  --input-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.60);
+  --input-border-hover: rgba(59, 130, 246, 0.45);
+  --input-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.70);
   
-  --highlight-bg: rgba(255, 92, 0, 0.12);
-  --highlight-text: #FF7A29;
+  --highlight-bg: rgba(59, 130, 246, 0.12);
+  --highlight-text: #60A5FA;
   --base-font-size: 15px;
 
   /* Suggestions & Empirical Chips Tokens */
-  --chip-bg: #161822;
+  --chip-bg: #141722;
   --chip-border: rgba(255, 255, 255, 0.08);
-  --chip-hover-bg: #1F2230;
-  --chip-hover-border: rgba(255, 92, 0, 0.40);
+  --chip-hover-bg: #1C2130;
+  --chip-hover-border: rgba(59, 130, 246, 0.45);
 }
 
 [data-theme="light"] {
-  /* ARCHITECTURAL SWISS EDITORIAL (Crisp High-Contrast Paper) */
-  --bg-app: #F5F6F9;
+  /* CRISP ARCHITECTURAL SWISS PAPER (High-Contrast Academic) */
+  --bg-app: #F8FAFC;
   --island-bg: #FFFFFF;
-  --island-border: rgba(0, 0, 0, 0.09);
-  --island-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.08), 0 2px 8px rgba(15, 23, 42, 0.03);
+  --island-border: rgba(15, 23, 42, 0.08);
+  --island-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.07), 0 2px 8px rgba(15, 23, 42, 0.03);
   
   --glass-surface: #FFFFFF;
-  --glass-surface-subtle: #F0F2F6;
-  --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 14px 30px rgba(0, 0, 0, 0.05);
+  --glass-surface-subtle: #F1F5F9;
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-shadow: 0 16px 32px rgba(15, 23, 42, 0.05);
   --glass-inset: inset 1px 1px 2px rgba(255, 255, 255, 1);
   
-  --text-main: #0F1218;
-  --text-muted: #5E6370;
-  --accent-cyan: #E04F00;
-  --accent-primary: #E04F00;
-  --accent-blue: #2563EB;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --accent-cyan: #0284C7;
+  --accent-primary: #2563EB;
+  --accent-blue: #1D4ED8;
   --accent-indigo: #4F46E5;
   --accent-emerald: #059669;
-  --accent-amber: #E04F00;
+  --accent-amber: #D97706;
   
   --sidebar-bg: #FFFFFF;
   --input-dock-bg: #FFFFFF;
-  --input-border: rgba(0, 0, 0, 0.12);
-  --input-border-hover: rgba(224, 79, 0, 0.50);
-  --input-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.08);
+  --input-border: rgba(15, 23, 42, 0.12);
+  --input-border-hover: rgba(37, 99, 235, 0.50);
+  --input-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.07);
 
-  --highlight-bg: rgba(224, 79, 0, 0.09);
-  --highlight-text: #C43E00;
+  --highlight-bg: rgba(37, 99, 235, 0.08);
+  --highlight-text: #1D4ED8;
 
   /* Suggestions & Empirical Chips Tokens */
   --chip-bg: #FFFFFF;
-  --chip-border: rgba(0, 0, 0, 0.09);
-  --chip-hover-bg: #F0F2F7;
-  --chip-hover-border: rgba(224, 79, 0, 0.40);
+  --chip-border: rgba(15, 23, 42, 0.08);
+  --chip-hover-bg: #F1F5F9;
+  --chip-hover-border: rgba(37, 99, 235, 0.40);
 }
 
 *, *::before, *::after {
