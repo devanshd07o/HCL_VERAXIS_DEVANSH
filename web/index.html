@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VERAXIS AI — Autonomous Scientific Intelligence</title>
+  <link rel="icon" href="/assets/veraxis_logo.png" type="image/png">
+  <link rel="stylesheet" href="/web/style.css">
+</head>
+<body>
+
+  <!-- Full-Screen Ambient Neuform Particle Canvas (Background Layer) -->
+  <script src="/web/canvas.js"></script>
+
+  <!-- Modular Renderers (Code, Table, Text) -->
+  <script src="/web/renderers/code_block.js"></script>
+  <script src="/web/renderers/text.js"></script>
+  <script src="/web/renderers/table.js"></script>
+
+  <!-- Permanent Top Header Bar -->
+  <header id="top-header">
+    <div class="brand-anchor">
+      <button class="header-icon-btn" id="sidebar-toggle-btn" title="Toggle History Sidebar">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <img src="/assets/veraxis_logo.png" alt="Veraxis AI Logo" class="brand-logo-img">
+      <span class="brand-name">VERAXIS AI</span>
+    </div>
+
+    <div class="header-actions">
+      <div class="neural-status-pill">
+        <span class="status-dot"></span>
+        <span>Neural Engine Online</span>
+      </div>
+
+      <button class="header-icon-btn" id="theme-toggle-btn" title="Toggle Dark/Light Theme">
+        <span id="theme-icon">☀️</span>
+      </button>
+
+      <button class="header-icon-btn" id="settings-toggle-btn" title="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="app-shell">
+    
+    <!-- Collapsible SaaS Sidebar (Closed by Default) -->
+    <aside id="sidebar" class="collapsed">
+      <button class="new-chat-btn" id="new-chat-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        New Session
+      </button>
+
+      <div style="font-size: 13px; font-weight: 700; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.08em;">
+        Research Sessions
+      </div>
+
+      <div class="history-list" id="history-list">
+        <!-- Injected via app.js from localStorage -->
+      </div>
+
+      <div style="font-size: 13px; color: var(--text-muted); text-align: center; margin-top: auto; padding-top: 14px; border-top: 1px solid var(--glass-border);">
+        HCL Major Capstone 2026
+      </div>
+    </aside>
+
+    <!-- Main Chat Workspace (Starts in Centered Initial Mode) -->
+    <main id="main-stage" class="initial-mode">
+      
+      <!-- Chat Conversation Stream (Visible when conversation is active) -->
+      <div id="chat-stream"></div>
+
+      <!-- Dock Container (Centered initially; floats at bottom when chat is active) -->
+      <div id="dock-container">
+        
+        <!-- Hero Center Header (Visible only in initial-mode) -->
+        <div id="hero-center-header">
+          <img src="/assets/veraxis_logo.png" alt="Veraxis AI Logo" class="hero-brand-logo">
+          <h1 class="hero-brand-title">VERAXIS AI</h1>
+          <p class="hero-brand-subtitle">What would you like to investigate today?</p>
+        </div>
+
+        <!-- Wide Liquid Glass Input Box (Tactile Meniscus & Specular Rim) -->
+        <div class="floating-input-pill liquid-glass-input">
+          <input type="text" id="user-input" placeholder="Ask a question or enter a research topic..." autocomplete="off">
+          
+          <div class="input-actions-cluster">
+            <button class="dock-btn mic-btn" id="mic-btn" title="Voice Dictation">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>
+            </button>
+            <button class="dock-btn send-btn" id="send-btn" title="Send Query">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Suggestion Chips (Visible only in initial-mode) -->
+        <div id="hero-suggestions">
+          <button class="suggestion-chip" data-query="Commercial viability of Solid-State EV Batteries by 2028">
+            <span>⚡</span> <span>Solid-State EV Batteries 2028</span>
+          </button>
+          <button class="suggestion-chip" data-query="Clinical trial breakthroughs in CRISPR-Cas9 in vivo base editing">
+            <span>🧬</span> <span>CRISPR-Cas9 Therapeutics</span>
+          </button>
+          <button class="suggestion-chip" data-query="NIST Post-Quantum Cryptography standards implementation benchmarks">
+            <span>🔒</span> <span>Post-Quantum Cryptography</span>
+          </button>
+          <button class="suggestion-chip" data-query="Commercial nuclear fusion net-energy Q-factor milestones 2026">
+            <span>⚛️</span> <span>Nuclear Fusion Milestones</span>
+          </button>
+        </div>
+
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Settings Modal (Glassmorphic Clay Overlay) -->
+  <div id="settings-modal-backdrop">
+    <div class="settings-modal-card thick-glass-clay">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <h2 style="font-size: 20px; font-weight: 700;">⚙️ System Preferences</h2>
+        <button id="close-settings-btn" class="header-icon-btn" style="width: 36px; height: 36px;">✕</button>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div style="font-weight: 600; font-size: 16px;">Font Family</div>
+          <div style="font-size: 13px; color: var(--text-muted);">Choose primary typography</div>
+        </div>
+        <select id="font-family-select" class="settings-select">
+          <option value="Comfortaa" selected>Comfortaa (Rounded)</option>
+          <option value="Outfit">Outfit (Clean SaaS)</option>
+          <option value="Inter">Inter (Swiss Neutral)</option>
+          <option value="JetBrains Mono">JetBrains Mono (Technical)</option>
+        </select>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <div style="font-weight: 600; font-size: 16px;">Font Size</div>
+          <div style="font-size: 13px; color: var(--text-muted);">Scale typography scale</div>
+        </div>
+        <select id="font-size-select" class="settings-select">
+          <option value="15px">Small (15px)</option>
+          <option value="16px">Medium (16px)</option>
+          <option value="18px" selected>Normal (18px)</option>
+          <option value="20px">Large (20px)</option>
+          <option value="22px">Extra Large (22px)</option>
+        </select>
+      </div>
+
+      <div class="settings-row" style="opacity: 0.65;">
+        <div>
+          <div style="font-weight: 600; font-size: 16px;">Authentication & API Keys</div>
+          <div style="font-size: 13px; color: var(--text-muted);">Enterprise SSO / Multi-Tenant</div>
+        </div>
+        <span style="font-size: 12px; background: rgba(56, 189, 248, 0.15); color: var(--accent-cyan); padding: 4px 10px; border-radius: 9999px;">Coming Soon</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Controller -->
+  <script src="/web/app.js"></script>
+</body>
+</html>

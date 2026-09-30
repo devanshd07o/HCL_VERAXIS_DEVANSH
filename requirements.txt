@@ -1,0 +1,11 @@
+# Multi-Agent Intelligence Platform Dependencies
+crewai==1.15.22
+crewai-tools
+streamlit==1.64.0
+arxiv==4.0.1
+duckduckgo-search==8.1.1
+wikipedia==1.4.0
+reportlab==4.4.9
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+requests>=2.31.0

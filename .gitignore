@@ -1,0 +1,52 @@
+# Environment & Secrets (STRICT - NEVER COMMIT)
+.env
+.env.*
+!.env.example
+*.env
+*_keys.txt
+groq_keys.txt
+keys.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+*.egg-info/
+dist-py/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Frontend Dependencies & Cache
+node_modules/
+frontend/node_modules/
+.vite/
+frontend/.vite/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Exported PDFs (Keep folder with .gitkeep)
+pdf_exports/*.pdf
+!pdf_exports/.gitkeep
+
+# System & OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# IDE & Editor Settings
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

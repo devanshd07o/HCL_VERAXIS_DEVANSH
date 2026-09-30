@@ -1,0 +1,300 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* DARK OBSIDIAN (Deep Twilight Space Slate - Linear/Vercel Quality) */
+  --bg-app: #090D16;
+  --glass-surface: rgba(17, 24, 39, 0.78);
+  --glass-surface-subtle: rgba(24, 33, 53, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 20px 45px rgba(0, 0, 0, 0.50), 0 4px 12px rgba(0, 0, 0, 0.30);
+  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.12), inset -1px -1px 2px rgba(0, 0, 0, 0.40);
+  --pill-shadow: 0 4px 12px rgba(0, 0, 0, 0.30), inset 1px 1px 1px rgba(255, 255, 255, 0.12);
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --accent-cyan: #38BDF8;
+  --accent-blue: #2563EB;
+  --accent-emerald: #10B981;
+  --sidebar-bg: rgba(13, 18, 30, 0.96);
+  --input-dock-bg: rgba(17, 24, 39, 0.85);
+  --shimmer-base: rgba(248, 250, 252, 0.45);
+  --shimmer-highlight: #FFFFFF;
+  --highlight-bg: rgba(56, 189, 248, 0.16);
+  --highlight-text: #38BDF8;
+  --base-font-size: 15px;
+
+  /* Liquid Glass Physics Tokens (Dark) */
+  --input-glass-bg: rgba(17, 24, 39, 0.82);
+  --input-glass-border: rgba(255, 255, 255, 0.12);
+  --input-specular-top: 0.30;
+  --input-shadow-drop: rgba(0, 0, 0, 0.45);
+  --input-shadow-ambient: rgba(0, 5, 20, 0.50);
+  --input-glass-inset: inset 1.5px 1.5px 3px rgba(255, 255, 255, 0.15), inset -1.5px -1.5px 4px rgba(0, 0, 0, 0.45);
+  --input-specular-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0.12) 30%, rgba(56, 189, 248, 0.15) 70%, transparent 100%);
+  --input-dome-reflection: radial-gradient(ellipse at 40% 25%, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.08) 40%, transparent 80%);
+  --input-dome-opacity: 0.60;
+
+  /* Suggestions Chips Tokens */
+  --chip-bg: rgba(255, 255, 255, 0.04);
+  --chip-border: rgba(255, 255, 255, 0.09);
+  --chip-hover-bg: rgba(56, 189, 248, 0.10);
+  --chip-hover-border: rgba(56, 189, 248, 0.35);
+}
+
+[data-theme="light"] {
+  /* SILK ALABASTER & WARM QUARTZ (Luxury Apple/Notion Daylight Aesthetic - Clean & Non-Glare) */
+  --bg-app: #F6F5F2;
+  --glass-surface: rgba(255, 255, 255, 0.88);
+  --glass-surface-subtle: rgba(246, 244, 240, 0.75);
+  --glass-border: rgba(0, 0, 0, 0.07);
+  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.05), 0 2px 6px rgba(0, 0, 0, 0.03);
+  --glass-inset: inset 1px 1px 2px rgba(255, 255, 255, 0.95), inset -1px -1px 2px rgba(0, 0, 0, 0.04);
+  --pill-shadow: 0 2px 8px rgba(0, 0, 0, 0.05), inset 1px 1px 1px #FFFFFF;
+  --text-main: #18181B;
+  --text-muted: #64748B;
+  --accent-cyan: #0284C7;
+  --accent-blue: #2563EB;
+  --accent-emerald: #059669;
+  --sidebar-bg: rgba(250, 249, 246, 0.96);
+  --input-dock-bg: rgba(255, 255, 255, 0.88);
+  --shimmer-base: rgba(24, 24, 27, 0.45);
+  --shimmer-highlight: #18181B;
+  --highlight-bg: rgba(2, 132, 199, 0.10);
+  --highlight-text: #0284C7;
+
+  /* Liquid Glass Physics Tokens (Light Silk) */
+  --input-glass-bg: rgba(255, 255, 255, 0.92);
+  --input-glass-border: rgba(0, 0, 0, 0.08);
+  --input-specular-top: 0.90;
+  --input-shadow-drop: rgba(0, 0, 0, 0.05);
+  --input-shadow-ambient: rgba(0, 0, 0, 0.08);
+  --input-glass-inset: inset 1px 1px 2px rgba(255, 255, 255, 1), inset -1px -1px 3px rgba(0, 0, 0, 0.03);
+  --input-specular-gradient: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.50) 35%, rgba(2, 132, 199, 0.12) 75%, transparent 100%);
+  --input-dome-reflection: radial-gradient(ellipse at 40% 25%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.20) 40%, transparent 80%);
+  --input-dome-opacity: 0.85;
+
+  /* Suggestions Chips Tokens */
+  --chip-bg: rgba(255, 255, 255, 0.80);
+  --chip-border: rgba(0, 0, 0, 0.08);
+  --chip-hover-bg: rgba(2, 132, 199, 0.08);
+  --chip-hover-border: rgba(2, 132, 199, 0.35);
+}
+
+/* Base CSS Reset - DO NOT pollute border-radius or margins universally! */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  font-family: var(--font-family, 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+  font-size: var(--base-font-size, 15px);
+  line-height: 1.6;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glass Surface Utility */
+.thick-glass-clay {
+  background: var(--glass-surface);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-inset);
+}
+
+/* Scroll Container pinned to Far-Right Window Edge */
+.stage-scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+.stage-scroll-container:hover {
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+}
+
+[data-theme="light"] .stage-scroll-container:hover {
+  scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+/* Minimalist Auto-Hiding 3px Scrollbar */
+.stage-scroll-container::-webkit-scrollbar {
+  width: 3px;
+}
+
+.stage-scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stage-scroll-container::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 9999px;
+  transition: background-color 0.2s ease;
+}
+
+.stage-scroll-container:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+[data-theme="light"] .stage-scroll-container:hover::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.stage-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}
+
+/* LIQUID GLASS INPUT (Authored Tactile Physics & Dynamic Prism Refraction) */
+.liquid-glass-input {
+  position: relative;
+  isolation: isolate;
+  background: var(--input-glass-bg);
+  backdrop-filter: blur(24px) saturate(210%) contrast(104%);
+  -webkit-backdrop-filter: blur(24px) saturate(210%) contrast(104%);
+  border: 1px solid var(--input-glass-border);
+  border-radius: 9999px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, var(--input-specular-top)),
+    0 6px 20px var(--input-shadow-drop),
+    0 18px 45px var(--input-shadow-ambient),
+    var(--input-glass-inset);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
+}
+
+/* Dynamic Meniscus Rim with Mouse-Tracking Spectral Prism Dispersion */
+.liquid-glass-input::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--prism-angle, 135deg) at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(255, 255, 255, 0.90) 0%,
+    rgba(56, 189, 248, 0.55) 25%,
+    rgba(168, 85, 247, 0.50) 50%,
+    rgba(244, 63, 94, 0.40) 75%,
+    rgba(255, 255, 255, 0.90) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 2;
+  transition: opacity 0.25s ease;
+}
+
+/* Dynamic Glossy Dome Reflection Tracking Cursor */
+.liquid-glass-input::after {
+  content: '';
+  position: absolute;
+  top: 4%;
+  left: 6%;
+  width: 88%;
+  height: 48%;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(2px);
+  background: radial-gradient(
+    ellipse at var(--mouse-x, 40%) var(--mouse-y, 25%),
+    rgba(255, 255, 255, 0.65) 0%,
+    rgba(255, 255, 255, 0.15) 35%,
+    transparent 75%
+  );
+  z-index: 1;
+  transition: opacity 0.25s ease;
+}
+
+.liquid-glass-input:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, var(--input-specular-top)),
+    0 8px 24px var(--input-shadow-drop),
+    0 20px 50px var(--input-shadow-ambient),
+    var(--input-glass-inset);
+}
+
+.liquid-glass-input:focus-within {
+  border-color: var(--accent-cyan);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, var(--input-specular-top)),
+    0 0 0 3px rgba(56, 189, 248, 0.18),
+    0 10px 28px var(--input-shadow-drop),
+    0 22px 55px var(--input-shadow-ambient),
+    var(--input-glass-inset);
+}
+
+/* Shimmer Animation */
+@keyframes t-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0% 0; }
+}
+
+.t-shimmer {
+  position: relative;
+  display: inline-block;
+  color: var(--shimmer-base);
+}
+
+.t-shimmer::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(90deg, transparent 0%, transparent 40%, var(--shimmer-highlight) 50%, transparent 60%, transparent 100%);
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-shimmer 2.2s linear infinite;
+}
+
+/* Mic Active Pulse */
+@keyframes micPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.mic-listening {
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+  color: #FFFFFF !important;
+  animation: micPulse 1.2s infinite;
+}
+
+/* Buttery Smooth Cascading Line Stream Animation */
+@keyframes butteryLineFlow {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.buttery-line {
+  animation: butteryLineFlow 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* Mobile Safe Area Padding Utility */
+.pb-safe {
+  padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 1.25rem));
+}
+
