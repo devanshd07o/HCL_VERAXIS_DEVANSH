@@ -305,7 +305,7 @@ export default function App() {
           />
         )}
 
-        {/* Left Collapsible Navigation Sidebar */}
+        {/* Left Collapsible Navigation Sidebar (Image 2 style floating island) */}
         <Sidebar
           sidebarOpen={sidebarOpen}
           sessions={sessions}
@@ -313,13 +313,14 @@ export default function App() {
           onNewSession={handleNewSession}
           onSelectSession={handleSelectSession}
           onDeleteSession={handleDeleteSession}
+          onOpenSettings={() => setSettingsOpen(true)}
         />
 
         {/* Center Main Stage (Adapts margins based on left/right panel states) */}
         <main
           className={`flex-1 h-full flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${
-            sidebarOpen ? "sm:pl-64 sm:w-[calc(100%-16rem)]" : "pl-0"
-          } ${rightPanelOpen ? "lg:pr-[380px]" : "pr-0"}`}
+            sidebarOpen ? "sm:pl-[300px] md:pl-[340px]" : "pl-0"
+          } ${rightPanelOpen ? "xl:pr-[430px]" : "pr-0"}`}
         >
           {isInitialMode ? (
             /* CENTERED LANDING HERO STATE */
@@ -331,6 +332,7 @@ export default function App() {
                 disabled={isLoading}
                 suggestions={dynamicSuggestions}
                 widthClass={activeWidthClass}
+                theme={theme}
               />
             </div>
           ) : (
