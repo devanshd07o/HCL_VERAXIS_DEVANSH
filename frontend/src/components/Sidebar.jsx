@@ -2,11 +2,7 @@ import React, { useState } from "react";
 import {
   Plus,
   Trash2,
-  MessageSquare,
   Search,
-  Sparkles,
-  Clock,
-  ShieldCheck,
   Settings,
   X,
   PanelLeftClose,
@@ -280,39 +276,8 @@ export default function Sidebar({
             </button>
           </HoverPill>
 
-          <div className="w-6 h-[1px] bg-[var(--glass-border)] my-1 shrink-0" />
-
-          {/* Middle: Scrollable Recent Session Icons */}
-          <div className="flex-1 w-full flex flex-col items-center gap-1.5 py-1.5 overflow-y-auto no-scrollbar">
-            {sessions.slice(0, 7).map((sess) => {
-              const isSelected = sess.id === currentSessionId;
-              const isDeepResearch = sess.messages?.some((m) => m.type === "research");
-
-              return (
-                <HoverPill key={sess.id} text={sess.title || "Chat Session"} position="right">
-                  <button
-                    onClick={() => onSelectSession(sess.id)}
-                    className={`relative w-10 h-10 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-[var(--highlight-bg)] border-[var(--accent-cyan)]/50 text-[var(--accent-cyan)] shadow-xs scale-105"
-                        : "bg-[var(--glass-surface-subtle)] border-transparent text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-border)]"
-                    }`}
-                  >
-                    {isDeepResearch ? (
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    ) : (
-                      <MessageSquare className="w-4 h-4" />
-                    )}
-                    {isSelected && (
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--accent-cyan)] ring-2 ring-[var(--bg-app)] animate-pulse" />
-                    )}
-                  </button>
-                </HoverPill>
-              );
-            })}
-          </div>
-
-          <div className="w-6 h-[1px] bg-[var(--glass-border)] my-1 shrink-0" />
+          {/* Spacer */}
+          <div className="flex-1" />
 
           {/* Bottom: Theme Toggle + Settings Icon */}
           <div className="flex flex-col items-center gap-2 mt-auto">
@@ -360,12 +325,16 @@ function SessionRow({ sess, isSelected, onSelect, onDelete }) {
       }`}
     >
       <div className="flex items-center gap-2.5 overflow-hidden pr-2">
-        {isDeepResearch ? (
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-        ) : (
-          <MessageSquare className="w-3.5 h-3.5 opacity-60 shrink-0" />
-        )}
-        <span className="text-[12.5px] truncate font-normal">{sess.title}</span>
+        <span
+          className={`w-1.5 h-1.5 rounded-full shrink-0 transition-colors ${
+            isSelected
+              ? "bg-[var(--accent-cyan)] shadow-[0_0_6px_rgba(56,189,248,0.8)]"
+              : isDeepResearch
+              ? "bg-emerald-400"
+              : "bg-[var(--text-muted)]/40"
+          }`}
+        />
+        <span className="text-[13px] truncate font-normal">{sess.title}</span>
       </div>
 
       <div className="flex items-center gap-1.5 shrink-0">

@@ -2,41 +2,41 @@
 @import "tailwindcss";
 
 :root {
-  /* ULTRA LUXURY OBSIDIAN GRAPHITE (Linear / Claude 3.5 SaaS Standard - Zero Blue Tint) */
-  --bg-app: #0C0C0E;
-  --island-bg: #141416;
-  --island-border: rgba(255, 255, 255, 0.08);
-  --island-shadow: 0 20px 48px -10px rgba(0, 0, 0, 0.75), 0 4px 16px rgba(0, 0, 0, 0.45);
+  /* LIGHTENED LUXURY GRAPHITE SLATE (Linear / Claude 3.5 Daylight-Softened Dark) */
+  --bg-app: #18191D;
+  --island-bg: #212229;
+  --island-border: rgba(255, 255, 255, 0.10);
+  --island-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.40), 0 4px 14px rgba(0, 0, 0, 0.25);
   
-  --glass-surface: #141416;
-  --glass-surface-subtle: #1C1C1F;
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-shadow: 0 16px 36px rgba(0, 0, 0, 0.60);
-  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.06);
+  --glass-surface: #212229;
+  --glass-surface-subtle: #292A33;
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --glass-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.08);
   
-  --text-main: #EDEDF2;
-  --text-muted: #8E90A2;
+  --text-main: #F4F4F7;
+  --text-muted: #A3A4B2;
   --accent-cyan: #38BDF8;
   --accent-blue: #3B82F6;
   --accent-indigo: #6366F1;
   --accent-emerald: #10B981;
   --accent-amber: #F59E0B;
   
-  --sidebar-bg: #101012;
-  --input-dock-bg: #17171A;
-  --input-border: rgba(255, 255, 255, 0.14);
-  --input-border-hover: rgba(255, 255, 255, 0.25);
-  --input-shadow: 0 14px 40px -6px rgba(0, 0, 0, 0.75), 0 2px 10px rgba(0, 0, 0, 0.45);
+  --sidebar-bg: #1C1D24;
+  --input-dock-bg: #272832;
+  --input-border: rgba(255, 255, 255, 0.16);
+  --input-border-hover: rgba(255, 255, 255, 0.28);
+  --input-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.40), 0 2px 10px rgba(0, 0, 0, 0.25);
   
-  --highlight-bg: rgba(99, 102, 241, 0.12);
+  --highlight-bg: rgba(99, 102, 241, 0.14);
   --highlight-text: #818CF8;
   --base-font-size: 15px;
 
   /* Suggestions Chips Tokens */
-  --chip-bg: #151518;
-  --chip-border: rgba(255, 255, 255, 0.08);
-  --chip-hover-bg: #1E1E23;
-  --chip-hover-border: rgba(99, 102, 241, 0.35);
+  --chip-bg: #23242D;
+  --chip-border: rgba(255, 255, 255, 0.10);
+  --chip-hover-bg: #2D2E3A;
+  --chip-hover-border: rgba(99, 102, 241, 0.40);
 }
 
 [data-theme="light"] {

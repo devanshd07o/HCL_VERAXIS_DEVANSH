@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, PanelRightClose, PanelRightOpen } from "lucide-react";
+import { PanelRightClose, PanelRightOpen } from "lucide-react";
 import HoverPill from "./HoverPill";
 
 export default function Header({
@@ -29,7 +29,7 @@ export default function Header({
       onDoubleClick={onDoubleClickHeader}
       className="fixed top-0 left-0 right-0 h-14 px-3 sm:px-5 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-2xl border-b border-[var(--glass-border)] transition-colors duration-300 select-none"
     >
-      {/* Brand Anchor: White/Bright Logo & Name in Dark Mode, Dark in Light Mode (No duplicate sidebar button) */}
+      {/* Brand Anchor: White/Bright Logo & Name in Dark Mode, Dark in Light Mode */}
       <div className="flex items-center gap-2.5">
         <div className="relative flex items-center">
           <img
@@ -46,16 +46,11 @@ export default function Header({
         />
       </div>
 
-      {/* Center Dynamic AI Chat Title Pill (Renames 2 times) */}
-      <div className="flex-1 flex justify-center px-2 max-w-[500px]">
-        <HoverPill text="Active Chat Topic (Auto-summarized by AI)">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--island-bg)] border border-[var(--glass-border)] shadow-xs transition-all max-w-[220px] sm:max-w-[360px] md:max-w-[420px] cursor-default">
-            <Sparkles className="w-3.5 h-3.5 text-[var(--accent-cyan)] shrink-0 animate-pulse-subtle" />
-            <span className="text-[12.5px] sm:text-[13px] font-semibold text-[var(--text-main)] truncate tracking-tight">
-              {chatTitle || "New Chat"}
-            </span>
-          </div>
-        </HoverPill>
+      {/* Center Dynamic Chat Title: Plain clean text, no pill background, no AI symbol */}
+      <div className="flex-1 flex justify-center px-4 max-w-[500px]">
+        <span className="text-[13.5px] sm:text-[14px] font-medium text-[var(--text-main)] truncate opacity-90 tracking-normal select-none">
+          {chatTitle || "New Chat"}
+        </span>
       </div>
 
       {/* Right Action: Clean Research Inspector Drawer Toggle */}
