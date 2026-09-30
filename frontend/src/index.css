@@ -196,3 +196,153 @@ html, body {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Publication Dossier Typography & Markdown Styles */
+.prose-dossier {
+  color: var(--text-main);
+  line-height: 1.7;
+}
+
+.prose-dossier h1 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--island-border);
+  color: var(--text-main);
+}
+
+.prose-dossier h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+
+.prose-dossier h3 {
+  font-size: 1.02rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+  color: var(--text-main);
+}
+
+.prose-dossier p {
+  margin: 0.6rem 0;
+}
+
+.prose-dossier ul, .prose-dossier ol {
+  margin: 0.6rem 0;
+  padding-left: 1.35rem;
+}
+
+.prose-dossier li {
+  margin: 0.25rem 0;
+}
+
+.prose-dossier strong {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.prose-dossier a {
+  color: var(--accent-primary);
+  text-decoration: underline;
+}
+
+.prose-dossier hr {
+  margin: 1.5rem 0;
+  border: none;
+  border-top: 1px solid var(--island-border);
+}
+
+.prose-dossier blockquote {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  border-left: 3px solid var(--accent-primary);
+  background: var(--glass-surface-subtle);
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-style: italic;
+}
+
+/* Beautiful Semantic Tables */
+.prose-dossier table {
+  width: 100%;
+  margin: 1rem 0;
+  border-collapse: collapse;
+  border: 1px solid var(--island-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  font-size: 0.85rem;
+}
+
+.prose-dossier thead {
+  background: var(--glass-surface-subtle);
+  border-bottom: 1px solid var(--island-border);
+}
+
+.prose-dossier th {
+  padding: 0.65rem 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--text-main);
+  text-align: left;
+}
+
+.prose-dossier td {
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--island-border);
+  color: var(--text-main);
+  line-height: 1.5;
+}
+
+.prose-dossier tr:last-child td {
+  border-bottom: none;
+}
+
+.prose-dossier tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Code Blocks */
+.prose-dossier code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85em;
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--accent-primary);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.35rem;
+}
+
+.prose-dossier pre {
+  margin: 1rem 0;
+  padding: 0.9rem;
+  background: #0B0E14;
+  border: 1px solid var(--island-border);
+  border-radius: 0.75rem;
+  overflow-x: auto;
+}
+
+.prose-dossier pre code {
+  background: transparent;
+  padding: 0;
+  color: #F8FAFC;
+}
+
+/* KaTeX Equations */
+.prose-dossier .katex-display {
+  margin: 0.8rem 0;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.prose-dossier .inline-math {
+  display: inline-block;
+  vertical-align: middle;
+}
+

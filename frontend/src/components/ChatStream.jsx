@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { marked } from "marked";
 import katex from "katex";
 import {
-  Download,
   BookOpen,
   Check,
   Copy,
@@ -12,57 +12,72 @@ import {
   Loader2,
   Sparkles,
   FileText,
-  ThumbsUp,
-  ThumbsDown,
 } from "lucide-react";
 
 // ============================================================================
-// 1. Text & LaTeX Preprocessing Helpers
+// 1. High-Precision Markdown + KaTeX Compiler
 // ============================================================================
 
-const SUB_MAP = {
-  "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄",
-  "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉",
-  "+": "₊", "-": "₋", "=": "₌", "(": "₍", ")": "₎",
-};
-
-const SUP_MAP = {
-  "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴",
-  "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹",
-  "+": "⁺", "-": "⁻", "=": "⁼", "(": "⁽", ")": "⁾",
-};
-
-function toUnicodeSub(str) {
-  return String(str).split("").map((c) => SUB_MAP[c] || c).join("");
-}
-
-function toUnicodeSup(str) {
-  return String(str).split("").map((c) => SUP_MAP[c] || c).join("");
-}
-
 /**
- * Pre-processes text to sanitize broken LLM math patterns, chemical formulas,
- * and rogue backslashes while leaving true LaTeX blocks intact.
+ * Pre-processes LaTeX math expressions and compiles Markdown to rich HTML:
+ * 1. Pre-renders display equations: \[ ... \] and $$ ... $$
+ * 2. Pre-renders inline formulas: \( ... \) and $ ... $
+ * 3. Replaces lingering naked math symbols outside math mode with clean Unicode
+ * 4. Compiles with marked to generate clean semantic HTML (tables, headers, lists, code)
+ * 5. Re-injects rendered vector KaTeX HTML
  */
-function sanitizeInlineText(raw) {
-  if (!raw) return "";
+function renderMarkdownWithKaTeX(rawText) {
+  if (!rawText) return "";
 
-  let text = raw;
+  const placeholders = [];
+  function saveBlock(html) {
+    const id = `KATEXPLACEHOLDER${placeholders.length}ENDTOKEN`;
+    placeholders.push(html);
+    return id;
+  }
 
-  // 1. Convert chemical formulas like Li$_{7}$La$_{3}$Zr$_{2}$O$_{12}$ or Li_{7}
-  text = text.replace(
-    /([A-Z][a-z]?)(?:\$_\{?(\d+)\}?\$|_\{?(\d+)\}?|\b_(\d+)\b)/g,
-    (_, elem, d1, d2, d3) => elem + toUnicodeSub(d1 || d2 || d3 || "")
-  );
+  let text = rawText;
 
-  // 2. Convert common superscripts like 10^{-6}, 10^{-7}, cm^{-2}, m^{1/2}
-  text = text.replace(/([a-zA-Z0-9]+)\^\{?(-?\d+|1\/2)\}?/g, (_, base, val) => {
-    if (val === "1/2") return base + "½";
-    if (val.startsWith("-")) return base + "⁻" + toUnicodeSup(val.slice(1));
-    return base + toUnicodeSup(val);
+  // 1. Display Math: \[ ... \] or $$ ... $$
+  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (_, math) => {
+    try {
+      const rendered = katex.renderToString(math.trim(), { displayMode: true, throwOnError: false });
+      return saveBlock(`<div class="my-3 py-2 px-3 overflow-x-auto text-center">${rendered}</div>`);
+    } catch {
+      return saveBlock(`<pre class="font-mono text-amber-500">${math}</pre>`);
+    }
   });
 
-  // 3. Clean raw TeX macros in prose & table cells
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
+    try {
+      const rendered = katex.renderToString(math.trim(), { displayMode: true, throwOnError: false });
+      return saveBlock(`<div class="my-3 py-2 px-3 overflow-x-auto text-center">${rendered}</div>`);
+    } catch {
+      return saveBlock(`<pre class="font-mono text-amber-500">${math}</pre>`);
+    }
+  });
+
+  // 2. Inline Math: \( ... \)
+  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (_, math) => {
+    try {
+      const rendered = katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
+      return saveBlock(`<span class="inline-math">${rendered}</span>`);
+    } catch {
+      return saveBlock(`<span class="font-mono text-amber-500">${math}</span>`);
+    }
+  });
+
+  // 3. Inline Math: $ ... $ (ensuring not \$)
+  text = text.replace(/(?<!\\)\$([^\$\n]+?)(?<!\\)\$/g, (_, math) => {
+    try {
+      const rendered = katex.renderToString(math.trim(), { displayMode: false, throwOnError: false });
+      return saveBlock(`<span class="inline-math">${rendered}</span>`);
+    } catch {
+      return saveBlock(`<span class="font-mono text-amber-500">${math}</span>`);
+    }
+  });
+
+  // 4. Any remaining naked LaTeX symbols outside math mode -> clean Unicode
   text = text
     .replace(/\\le\b/g, "≤")
     .replace(/\\ge\b/g, "≥")
@@ -70,410 +85,43 @@ function sanitizeInlineText(raw) {
     .replace(/\\times\b/g, "×")
     .replace(/\\pm\b/g, "±")
     .replace(/\\cdot\b/g, "·")
+    .replace(/\\downarrow\b/g, "↓")
+    .replace(/\\uparrow\b/g, "↑")
+    .replace(/\\rightarrow\b/g, "→")
+    .replace(/\\leftarrow\b/g, "←")
+    .replace(/\\sigma_{ion}\b/g, "σ_ion")
+    .replace(/\\sigma\b/g, "σ")
+    .replace(/\\phi_{cer}\b/g, "ϕ_cer")
+    .replace(/\\phi\b/g, "ϕ")
     .replace(/\\mu\b/g, "μ")
     .replace(/\\alpha\b/g, "α")
     .replace(/\\beta\b/g, "β")
     .replace(/\\gamma\b/g, "γ")
-    .replace(/\\sigma\b/g, "σ")
     .replace(/\\Omega\b/g, "Ω")
     .replace(/\\text\{([^}]+)\}/g, "$1")
     .replace(/\\([ ]+)/g, " ")
     .replace(/\\,/g, " ");
 
-  // 4. Fix naked trailing dollar signs in prices/tables: " 30$" -> " $30"
-  text = text.replace(/(?<=\s)(\d+(?:\.\d+)?)\$/g, "$$$1");
-  text = text.replace(/([≤≥≈~])\s*(\d+(?:\.\d+)?)\$/g, "$1 $$$2");
-
-  return text;
-}
-
-// ============================================================================
-// 2. Safe KaTeX Formula Rendering
-// ============================================================================
-
-function renderKaTeX(formula, isDisplayMode = false) {
-  if (!formula || !formula.trim()) return "";
+  // 5. Parse Markdown to HTML via marked
+  let html = "";
   try {
-    return katex.renderToString(formula.trim(), {
-      displayMode: isDisplayMode,
-      throwOnError: false,
-      output: "htmlAndMathml",
-    });
+    html = marked.parse(text);
   } catch {
-    return `<span class="font-mono text-amber-500">${formula}</span>`;
-  }
-}
-
-// ============================================================================
-// 3. Inline Formatted Span Parser (Bold, Code, Math, Links)
-// ============================================================================
-
-function renderInlineFormatting(rawText) {
-  if (!rawText) return null;
-
-  const clean = sanitizeInlineText(rawText);
-
-  // Tokenize for inline math ($...$), bold (**...**), code (`...`), and plain text
-  const tokens = [];
-  let remaining = clean;
-  let keyIdx = 0;
-
-  while (remaining.length > 0) {
-    // 1. Inline math: $...$
-    const mathMatch = remaining.match(/^(?<!\\)\$([^\$]+?)(?<!\\)\$/);
-    if (mathMatch) {
-      const formula = mathMatch[1];
-      const html = renderKaTeX(formula, false);
-      tokens.push(
-        <span
-          key={`math-${keyIdx++}`}
-          className="inline-math px-0.5"
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      );
-      remaining = remaining.slice(mathMatch[0].length);
-      continue;
-    }
-
-    // 2. Inline code: `...`
-    const codeMatch = remaining.match(/^`([^`]+)`/);
-    if (codeMatch) {
-      tokens.push(
-        <code
-          key={`code-${keyIdx++}`}
-          className="px-1.5 py-0.5 rounded-md text-[12px] font-mono bg-black/[0.06] dark:bg-white/[0.08] text-[var(--accent-primary)] font-semibold"
-        >
-          {codeMatch[1]}
-        </code>
-      );
-      remaining = remaining.slice(codeMatch[0].length);
-      continue;
-    }
-
-    // 3. Bold: **...**
-    const boldMatch = remaining.match(/^\*\*([^*]+)\*\*/);
-    if (boldMatch) {
-      tokens.push(
-        <strong key={`bold-${keyIdx++}`} className="font-semibold text-[var(--text-main)]">
-          {renderInlineFormatting(boldMatch[1])}
-        </strong>
-      );
-      remaining = remaining.slice(boldMatch[0].length);
-      continue;
-    }
-
-    // 4. Markdown links: [Title](url)
-    const linkMatch = remaining.match(/^\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/);
-    if (linkMatch) {
-      tokens.push(
-        <a
-          key={`link-${keyIdx++}`}
-          href={linkMatch[2]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-[var(--accent-primary)] hover:underline font-medium inline-flex items-center gap-0.5"
-        >
-          <span>{linkMatch[1]}</span>
-          <ExternalLink className="w-2.5 h-2.5 opacity-70" />
-        </a>
-      );
-      remaining = remaining.slice(linkMatch[0].length);
-      continue;
-    }
-
-    // 5. Plain character chunk
-    const nextSpecial = remaining.search(/(\$|`|\*\*|\[)/);
-    if (nextSpecial === -1) {
-      tokens.push(<span key={`txt-${keyIdx++}`}>{remaining}</span>);
-      break;
-    } else if (nextSpecial === 0) {
-      tokens.push(<span key={`txt-${keyIdx++}`}>{remaining[0]}</span>);
-      remaining = remaining.slice(1);
-    } else {
-      tokens.push(<span key={`txt-${keyIdx++}`}>{remaining.slice(0, nextSpecial)}</span>);
-      remaining = remaining.slice(nextSpecial);
-    }
+    html = text;
   }
 
-  return tokens;
+  // 6. Restore all KaTeX HTML placeholders
+  placeholders.forEach((mathHtml, i) => {
+    const id = `KATEXPLACEHOLDER${i}ENDTOKEN`;
+    html = html.replace(`<p>${id}</p>`, mathHtml);
+    html = html.replace(id, mathHtml);
+  });
+
+  return html;
 }
 
 // ============================================================================
-// 4. Full Markdown Block Parser
-// ============================================================================
-
-function parseBlocks(markdownText) {
-  if (!markdownText) return [];
-
-  const rawBlocks = [];
-  const lines = markdownText.split("\n");
-  let i = 0;
-
-  while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    // 1. Math Display Block \[ ... \]
-    if (trimmed.startsWith("\\[")) {
-      let mathContent = "";
-      if (trimmed.endsWith("\\]") && trimmed.length > 2) {
-        mathContent = trimmed.slice(2, -2).trim();
-        i++;
-      } else {
-        mathContent = trimmed.slice(2).trim();
-        i++;
-        while (i < lines.length) {
-          const nextTrimmed = lines[i].trim();
-          if (nextTrimmed.endsWith("\\]")) {
-            mathContent += "\n" + nextTrimmed.slice(0, -2).trim();
-            i++;
-            break;
-          } else {
-            mathContent += "\n" + lines[i];
-            i++;
-          }
-        }
-      }
-      rawBlocks.push({ type: "display_math", content: mathContent });
-      continue;
-    }
-
-    // 2. Math Display Block $$ ... $$
-    if (trimmed.startsWith("$$")) {
-      let mathContent = "";
-      if (trimmed.endsWith("$$") && trimmed.length > 2) {
-        mathContent = trimmed.slice(2, -2).trim();
-        i++;
-      } else {
-        mathContent = trimmed.slice(2).trim();
-        i++;
-        while (i < lines.length) {
-          const nextTrimmed = lines[i].trim();
-          if (nextTrimmed.endsWith("$$")) {
-            mathContent += "\n" + nextTrimmed.slice(0, -2).trim();
-            i++;
-            break;
-          } else {
-            mathContent += "\n" + lines[i];
-            i++;
-          }
-        }
-      }
-      rawBlocks.push({ type: "display_math", content: mathContent });
-      continue;
-    }
-
-    // 3. Fenced Code Block ```
-    if (trimmed.startsWith("```")) {
-      const lang = trimmed.slice(3).trim();
-      let codeLines = [];
-      i++;
-      while (i < lines.length && !lines[i].trim().startsWith("```")) {
-        codeLines.push(lines[i]);
-        i++;
-      }
-      i++; // skip closing ```
-      rawBlocks.push({ type: "code", lang, content: codeLines.join("\n") });
-      continue;
-    }
-
-    // 4. Markdown Table: lines starting with |
-    if (trimmed.startsWith("|")) {
-      const tableLines = [];
-      while (i < lines.length && lines[i].trim().startsWith("|")) {
-        tableLines.push(lines[i].trim());
-        i++;
-      }
-      rawBlocks.push({ type: "table", lines: tableLines });
-      continue;
-    }
-
-    // 5. Headings (#, ##, ###)
-    if (trimmed.startsWith("#")) {
-      const level = trimmed.match(/^#+/)[0].length;
-      const text = trimmed.replace(/^#+\s*/, "");
-      rawBlocks.push({ type: "heading", level, text });
-      i++;
-      continue;
-    }
-
-    // 6. Horizontal Rule
-    if (/^---$|^\*\*\*$|^___$/.test(trimmed)) {
-      rawBlocks.push({ type: "hr" });
-      i++;
-      continue;
-    }
-
-    // 7. Unordered / Ordered List Item
-    if (/^[-*•]\s+/.test(trimmed)) {
-      rawBlocks.push({ type: "list_item", text: trimmed.replace(/^[-*•]\s+/, "") });
-      i++;
-      continue;
-    }
-    if (/^\d+\.\s+/.test(trimmed)) {
-      rawBlocks.push({ type: "numbered_item", text: trimmed.replace(/^\d+\.\s+/, "") });
-      i++;
-      continue;
-    }
-
-    // 8. Empty Line
-    if (!trimmed) {
-      i++;
-      continue;
-    }
-
-    // 9. Standard Paragraph
-    rawBlocks.push({ type: "paragraph", text: trimmed });
-    i++;
-  }
-
-  return rawBlocks;
-}
-
-// ============================================================================
-// 5. Block Renderer Components
-// ============================================================================
-
-function FormattedContent({ text }) {
-  const blocks = useMemo(() => parseBlocks(text), [text]);
-
-  return (
-    <div className="space-y-3.5 text-[14px] sm:text-[14.5px] leading-relaxed text-[var(--text-main)]">
-      {blocks.map((block, idx) => {
-        if (block.type === "display_math") {
-          const html = renderKaTeX(block.content, true);
-          return (
-            <div
-              key={idx}
-              className="my-3 py-2 px-3 overflow-x-auto rounded-xl bg-black/[0.03] dark:bg-white/[0.03] border border-[var(--island-border)] flex justify-center text-center"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-          );
-        }
-
-        if (block.type === "table") {
-          const headerLine = block.lines[0];
-          const hasSeparator = block.lines.length > 1 && block.lines[1].includes("---");
-          const headers = headerLine
-            .split("|")
-            .filter((_, i, arr) => i > 0 && i < arr.length - 1)
-            .map((c) => c.trim());
-
-          const bodyLines = hasSeparator ? block.lines.slice(2) : block.lines.slice(1);
-
-          return (
-            <div key={idx} className="my-3 w-full overflow-x-auto rounded-xl border border-[var(--island-border)] shadow-xs">
-              <table className="w-full text-left text-[12.5px] sm:text-[13px] border-collapse">
-                <thead>
-                  <tr className="bg-[var(--glass-surface-subtle)] border-b border-[var(--island-border)]">
-                    {headers.map((h, hIdx) => (
-                      <th
-                        key={hIdx}
-                        className="py-2.5 px-3 font-semibold text-[var(--text-main)] font-sans uppercase tracking-wider text-[11px]"
-                      >
-                        {renderInlineFormatting(h)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--island-border)]">
-                  {bodyLines.map((rowLine, rIdx) => {
-                    const cells = rowLine
-                      .split("|")
-                      .filter((_, i, arr) => i > 0 && i < arr.length - 1)
-                      .map((c) => c.trim());
-
-                    return (
-                      <tr
-                        key={rIdx}
-                        className="hover:bg-black/[0.02] dark:hover:bg-white/[0.02] transition-colors"
-                      >
-                        {cells.map((cell, cIdx) => (
-                          <td key={cIdx} className="py-2.5 px-3 text-[var(--text-main)] leading-snug">
-                            {renderInlineFormatting(cell)}
-                          </td>
-                        ))}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          );
-        }
-
-        if (block.type === "code") {
-          return (
-            <div key={idx} className="my-3 rounded-xl overflow-hidden border border-[var(--island-border)] bg-[#0F1117] text-white">
-              <div className="flex items-center justify-between px-3 py-1.5 bg-black/40 text-[11px] font-mono text-zinc-400 border-b border-white/[0.08]">
-                <span>{block.lang || "code"}</span>
-                <CopyButton text={block.content} />
-              </div>
-              <pre className="p-3.5 text-[12.5px] font-mono overflow-x-auto leading-relaxed">
-                <code>{block.content}</code>
-              </pre>
-            </div>
-          );
-        }
-
-        if (block.type === "heading") {
-          if (block.level === 1) {
-            return (
-              <h1 key={idx} className="text-[19px] sm:text-[21px] font-bold text-[var(--text-main)] pt-2 pb-1 border-b border-[var(--island-border)]">
-                {renderInlineFormatting(block.text)}
-              </h1>
-            );
-          }
-          if (block.level === 2) {
-            return (
-              <h2 key={idx} className="text-[16px] sm:text-[17px] font-bold text-[var(--text-main)] pt-2 pb-0.5">
-                {renderInlineFormatting(block.text)}
-              </h2>
-            );
-          }
-          return (
-            <h3 key={idx} className="text-[14.5px] sm:text-[15px] font-semibold text-[var(--text-main)] pt-1">
-              {renderInlineFormatting(block.text)}
-            </h3>
-          );
-        }
-
-        if (block.type === "list_item") {
-          return (
-            <div key={idx} className="flex items-start gap-2 py-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] mt-2 shrink-0" />
-              <div className="flex-1">{renderInlineFormatting(block.text)}</div>
-            </div>
-          );
-        }
-
-        if (block.type === "numbered_item") {
-          return (
-            <div key={idx} className="flex items-start gap-2 py-0.5">
-              <span className="font-mono text-[11.5px] font-bold text-[var(--accent-primary)] mt-0.5 shrink-0">
-                •
-              </span>
-              <div className="flex-1">{renderInlineFormatting(block.text)}</div>
-            </div>
-          );
-        }
-
-        if (block.type === "hr") {
-          return <hr key={idx} className="my-4 border-[var(--island-border)]" />;
-        }
-
-        return (
-          <p key={idx} className="leading-relaxed">
-            {renderInlineFormatting(block.text)}
-          </p>
-        );
-      })}
-    </div>
-  );
-}
-
-// ============================================================================
-// 6. Safe Typewriter Revealer
+// 2. Safe Typewriter Slicer (Guarantees Delimiters Are Never Sliced Mid-Way)
 // ============================================================================
 
 function getSafeSlice(fullText, targetLength) {
@@ -482,7 +130,7 @@ function getSafeSlice(fullText, targetLength) {
 
   let slice = fullText.slice(0, target);
 
-  // Math Block \[ ... \] safety
+  // 1. Math Block \[ ... \] safety
   const openBracket = (slice.match(/\\\[/g) || []).length;
   const closeBracket = (slice.match(/\\\]/g) || []).length;
   if (openBracket > closeBracket) {
@@ -493,7 +141,18 @@ function getSafeSlice(fullText, targetLength) {
     }
   }
 
-  // Double dollar $$ safety
+  // 2. Math Block \( ... \) safety
+  const openParen = (slice.match(/\\\(/g) || []).length;
+  const closeParen = (slice.match(/\\\)/g) || []).length;
+  if (openParen > closeParen) {
+    const closeIdx = fullText.indexOf("\\)", target);
+    if (closeIdx !== -1) {
+      target = closeIdx + 2;
+      slice = fullText.slice(0, target);
+    }
+  }
+
+  // 3. Double dollar $$ safety
   const doubleDollars = (slice.match(/\$\$/g) || []).length;
   if (doubleDollars % 2 !== 0) {
     const closeIdx = fullText.indexOf("$$", target);
@@ -503,7 +162,7 @@ function getSafeSlice(fullText, targetLength) {
     }
   }
 
-  // Single dollar $ safety
+  // 4. Single dollar $ safety
   const singleDollars = (slice.replace(/\$\$/g, "").match(/(?<!\\)\$/g) || []).length;
   if (singleDollars % 2 !== 0) {
     const closeIdx = fullText.indexOf("$", target);
@@ -513,7 +172,7 @@ function getSafeSlice(fullText, targetLength) {
     }
   }
 
-  // Code block ``` safety
+  // 5. Code block ``` safety
   const codeFences = (slice.match(/```/g) || []).length;
   if (codeFences % 2 !== 0) {
     const closeIdx = fullText.indexOf("```", target);
@@ -536,7 +195,7 @@ function TypewriterStreamContent({ fullText, onComplete }) {
       return;
     }
 
-    const stepSize = Math.max(16, Math.floor(fullText.length / 100));
+    const stepSize = Math.max(20, Math.floor(fullText.length / 80));
 
     const interval = setInterval(() => {
       setDisplayedLength((prev) => {
@@ -560,13 +219,17 @@ function TypewriterStreamContent({ fullText, onComplete }) {
   };
 
   const currentSlice = fullText.slice(0, displayedLength);
+  const htmlContent = useMemo(() => renderMarkdownWithKaTeX(currentSlice), [currentSlice]);
 
   return (
     <div className="relative">
-      <FormattedContent text={currentSlice} />
+      <div
+        className="prose-dossier"
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
+      />
 
       {!isFinished && (
-        <div className="inline-flex items-center gap-2 mt-2">
+        <div className="inline-flex items-center gap-2 mt-2 select-none">
           <span className="inline-block w-1.5 h-4 bg-[var(--accent-primary)] animate-pulse" />
           <button
             type="button"
@@ -583,7 +246,7 @@ function TypewriterStreamContent({ fullText, onComplete }) {
 }
 
 // ============================================================================
-// 7. Compact Perplexity-Style Thinking Component
+// 3. Compact Perplexity-Style Thinking Component
 // ============================================================================
 
 const DYNAMIC_THINKING_STEPS = [
@@ -641,7 +304,6 @@ function PerplexityThinking({ isDone = false, duration = null }) {
         )}
       </div>
 
-      {/* Expandable Minimal Step Details */}
       {isOpen && (
         <div className="mt-2 ml-2 pl-3 border-l-2 border-[var(--accent-primary)]/40 space-y-1.5 text-[11.5px] font-mono text-[var(--text-muted)] animate-buttery-fade-in">
           <div className="flex items-center gap-1.5 text-[var(--text-main)]">
@@ -667,7 +329,7 @@ function PerplexityThinking({ isDone = false, duration = null }) {
 }
 
 // ============================================================================
-// 8. Copy Button Component
+// 4. Copy Button Component
 // ============================================================================
 
 function CopyButton({ text }) {
@@ -692,7 +354,7 @@ function CopyButton({ text }) {
 }
 
 // ============================================================================
-// 9. Main ChatStream Export
+// 5. Main ChatStream Export
 // ============================================================================
 
 export default function ChatStream({
@@ -774,7 +436,12 @@ export default function ChatStream({
                       onComplete={() => handleTypingComplete(idx)}
                     />
                   ) : (
-                    <FormattedContent text={msg.content} />
+                    <div
+                      className="prose-dossier"
+                      dangerouslySetInnerHTML={{
+                        __html: renderMarkdownWithKaTeX(msg.content),
+                      }}
+                    />
                   )}
                 </div>
 
