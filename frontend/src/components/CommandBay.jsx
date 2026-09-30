@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Mic, ArrowUp, Sparkles, Loader2, Zap, Compass, Check, Terminal, Radio } from "lucide-react";
-import HoverPill from "./HoverPill";
+import { Mic, ArrowUp, Sparkles, Loader2, Compass } from "lucide-react";
 
 const TYPEWRITER_PHRASES = [
   "Investigate solid-state battery ceramic electrolyte conductivity & dendrite mitigation...",
@@ -20,7 +19,7 @@ export default function CommandBay({
   placeholder,
   researchActive = true,
   setResearchActive,
-  variant = "workbench", // "workbench" | "dock"
+  variant = "workbench", // "workbench" (homepage hero) | "dock" (chat bottom)
   theme = "dark",
 }) {
   const [isListening, setIsListening] = useState(false);
@@ -29,7 +28,7 @@ export default function CommandBay({
   const recognitionRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Typewriter rotation when input is empty
+  // Typewriter placeholder rotation
   useEffect(() => {
     if (value || isListening) return;
 
@@ -49,15 +48,15 @@ export default function CommandBay({
         charIndex++;
       }
 
-      let speed = isDeleting ? 20 : 45;
+      let speed = isDeleting ? 18 : 40;
 
       if (!isDeleting && charIndex === currentPhrase.length) {
-        speed = 2400;
+        speed = 2200;
         isDeleting = true;
       } else if (isDeleting && charIndex === 0) {
         isDeleting = false;
         phraseIndex = (phraseIndex + 1) % TYPEWRITER_PHRASES.length;
-        speed = 350;
+        speed = 300;
       }
 
       timeoutId = setTimeout(tick, speed);
@@ -128,70 +127,33 @@ export default function CommandBay({
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      onSend(value, researchActive);
+      if (value.trim() && !disabled) {
+        onSend(value, researchActive);
+      }
     }
   };
 
   const activePlaceholder = isListening
-    ? "Acoustic sensor active... Speak your research topic clearly"
-    : placeholder || typewriterText || "Enter scientific research directive, hypothesis, or technical query...";
+    ? "Acoustic sensor active... Speak your research query clearly"
+    : placeholder || typewriterText || "Ask a technical research question, hypothesis, or topic...";
 
   const isWorkbench = variant === "workbench";
-  const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
-
   const isDark = theme === "dark";
 
   return (
     <div
-      className={`relative w-full transition-all duration-300 select-none ${
+      className={`relative w-full transition-all duration-200 select-none ${
         isWorkbench
           ? isDark
-            ? "rounded-2xl p-3 sm:p-4 bg-[#13151D] border border-white/[0.10] shadow-[0_20px_45px_-10px_rgba(0,0,0,0.65)]"
-            : "rounded-2xl p-3 sm:p-4 bg-white border border-black/[0.09] shadow-[0_16px_36px_-10px_rgba(0,0,0,0.06)]"
+            ? "rounded-2xl p-3 sm:p-4 bg-[#14161F] border border-white/[0.12] shadow-[0_16px_40px_-10px_rgba(0,0,0,0.6)] focus-within:border-[var(--accent-primary)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20"
+            : "rounded-2xl p-3 sm:p-4 bg-white border border-black/[0.12] shadow-[0_16px_36px_-10px_rgba(0,0,0,0.06)] focus-within:border-[var(--accent-primary)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/15"
           : isDark
-          ? "rounded-xl p-2.5 sm:p-3 bg-[#13151D] border border-white/[0.10] shadow-[0_12px_28px_-6px_rgba(0,0,0,0.5)]"
-          : "rounded-xl p-2.5 sm:p-3 bg-white border border-black/[0.09] shadow-[0_10px_24px_-6px_rgba(0,0,0,0.05)]"
+          ? "rounded-2xl p-2.5 sm:p-3 bg-[#14161F] border border-white/[0.12] shadow-[0_12px_30px_-6px_rgba(0,0,0,0.5)] focus-within:border-[var(--accent-primary)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/20"
+          : "rounded-2xl p-2.5 sm:p-3 bg-white border border-black/[0.12] shadow-[0_10px_24px_-6px_rgba(0,0,0,0.05)] focus-within:border-[var(--accent-primary)]/60 focus-within:ring-2 focus-within:ring-[var(--accent-primary)]/15"
       }`}
     >
-      {/* Top Console Deck: Research Priority & Intent Classifier Beacon */}
-      <div className="flex items-center justify-between gap-3 pb-2 mb-1.5 border-b border-[var(--island-border)]">
-        {/* Research Priority Button */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setResearchActive?.((prev) => !prev)}
-            className={`flex items-center gap-2 px-3 py-1 rounded-xl text-[12px] font-mono font-semibold transition-all cursor-pointer ${
-              researchActive
-                ? isDark
-                  ? "bg-[var(--highlight-bg)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/40 shadow-xs"
-                  : "bg-blue-50 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30 shadow-xs"
-                : "bg-white/[0.03] text-[var(--text-muted)] border border-white/[0.06] hover:text-[var(--text-main)]"
-            }`}
-            title="Toggle Research Priority (Intent Classifier prioritizes scientific synthesis when active)"
-          >
-            <Compass className={`w-3.5 h-3.5 ${researchActive ? "text-[var(--accent-primary)] animate-pulse" : ""}`} />
-            <span>Research Priority</span>
-            <span className={`text-[9.5px] px-1.5 py-0.2 rounded font-mono ${
-              researchActive
-                ? isDark
-                  ? "bg-black/40 text-[var(--accent-primary)]"
-                  : "bg-white text-[var(--accent-primary)]"
-                : "bg-white/[0.05] text-[var(--text-muted)]"
-            }`}>
-              {researchActive ? "Active" : "Auto"}
-            </span>
-          </button>
-        </div>
-
-        {/* Engine Status Beacon */}
-        <div className="flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)]">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="hidden xs:inline text-[var(--text-muted)] opacity-85">Intent Classifier Active</span>
-        </div>
-      </div>
-
-      {/* Main Command Input Area */}
-      <div className="relative flex items-start gap-2.5 my-1">
+      {/* Main Textarea Input */}
+      <div className="relative flex items-start gap-2">
         <textarea
           ref={inputRef}
           rows={isWorkbench ? 2 : 1}
@@ -200,65 +162,86 @@ export default function CommandBay({
           onKeyDown={handleKeyDown}
           disabled={disabled || isEnhancing}
           placeholder={activePlaceholder}
-          className="flex-1 w-full bg-transparent border-none outline-none resize-none text-[var(--text-main)] text-[14.5px] sm:text-[15.5px] font-normal placeholder:text-[var(--text-muted)] placeholder:opacity-60 py-1 px-1 leading-relaxed selection:bg-[#FF5C00]/30"
+          className="flex-1 w-full bg-transparent border-none outline-none resize-none text-[var(--text-main)] text-[14px] sm:text-[15px] font-normal placeholder:text-[var(--text-muted)] placeholder:opacity-55 py-1 px-1 leading-relaxed selection:bg-[#2563EB]/30"
           autoComplete="off"
           style={{ caretColor: "var(--accent-primary)" }}
         />
       </div>
 
-      {/* Bottom Action Deck */}
-      <div className="flex items-center justify-between pt-3 mt-1 border-t border-[var(--island-border)] text-[11.5px] font-mono text-[var(--text-muted)]">
-        {/* Left Stats */}
-        <div className="flex items-center gap-3">
-          <span className="opacity-75">{wordCount} words</span>
-          {isWorkbench && (
-            <span className="hidden sm:inline opacity-50">• Press Enter to execute</span>
-          )}
-        </div>
-
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Enhance Button */}
-          <HoverPill text="Enhance prompt into structured academic inquiry">
-            <button
-              type="button"
-              onClick={handleEnhance}
-              disabled={disabled || isEnhancing || !value.trim()}
-              className="h-8 px-3 rounded-lg flex items-center gap-1.5 text-[11px] font-mono font-semibold bg-[var(--highlight-bg)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/20 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
-            >
-              {isEnhancing ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Sparkles className="w-3.5 h-3.5" />
-              )}
-              <span>{isEnhancing ? "Refining..." : "Enhance"}</span>
-            </button>
-          </HoverPill>
-
-          {/* Voice Dictation (Mic) */}
-          <HoverPill text={isListening ? "Stop Voice Dictation" : "Voice Dictation"}>
-            <button
-              type="button"
-              onClick={toggleMic}
-              disabled={disabled || isEnhancing}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
-                isListening
-                  ? "bg-rose-500/20 text-rose-400 border border-rose-500/50 animate-pulse"
-                  : "bg-[var(--glass-surface-subtle)] border border-[var(--island-border)] text-[var(--text-main)] hover:border-[var(--text-muted)] active:scale-95"
+      {/* Bottom Control & Action Bar */}
+      <div className="flex items-center justify-between pt-2 mt-1 border-t border-[var(--island-border)] text-[11px] font-mono text-[var(--text-muted)]">
+        {/* Left: Research Priority Pill */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setResearchActive?.((prev) => !prev)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium transition-all cursor-pointer ${
+              researchActive
+                ? isDark
+                  ? "bg-[var(--highlight-bg)] text-[var(--accent-primary)] border border-[var(--accent-primary)]/40 shadow-xs"
+                  : "bg-blue-50 text-[var(--accent-primary)] border border-[var(--accent-primary)]/30 shadow-xs"
+                : "bg-transparent text-[var(--text-muted)] border border-transparent hover:text-[var(--text-main)] hover:bg-black/[0.04] dark:hover:bg-white/[0.04]"
+            }`}
+            title="Toggle Research Priority (prioritizes arXiv preprints and multi-agent synthesis)"
+          >
+            <Compass className={`w-3 h-3 ${researchActive ? "text-[var(--accent-primary)]" : ""}`} />
+            <span>Research</span>
+            <span
+              className={`text-[9px] px-1 py-0.2 rounded font-mono ${
+                researchActive
+                  ? isDark
+                    ? "bg-black/40 text-[var(--accent-primary)]"
+                    : "bg-white text-[var(--accent-primary)]"
+                  : "opacity-60"
               }`}
             >
-              <Mic className="w-3.5 h-3.5 opacity-80" />
-            </button>
-          </HoverPill>
+              {researchActive ? "Priority" : "Auto"}
+            </span>
+          </button>
+        </div>
 
-          {/* Execute Directive Button */}
+        {/* Right Actions: Enhance, Mic, Execute */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Enhance Button */}
+          <button
+            type="button"
+            onClick={handleEnhance}
+            disabled={disabled || isEnhancing || !value.trim()}
+            className="h-7.5 px-2.5 rounded-lg flex items-center gap-1 text-[11px] font-mono font-medium bg-[var(--highlight-bg)] border border-[var(--accent-primary)]/30 text-[var(--accent-primary)] hover:bg-[var(--accent-primary)]/20 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+            title="Refine prompt into academic inquiry"
+          >
+            {isEnhancing ? (
+              <Loader2 className="w-3 h-3 animate-spin" />
+            ) : (
+              <Sparkles className="w-3 h-3" />
+            )}
+            <span className="hidden xs:inline">{isEnhancing ? "Refining..." : "Enhance"}</span>
+          </button>
+
+          {/* Voice Dictation (Mic) */}
+          <button
+            type="button"
+            onClick={toggleMic}
+            disabled={disabled || isEnhancing}
+            className={`w-7.5 h-7.5 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
+              isListening
+                ? "bg-rose-500/20 text-rose-400 border border-rose-500/50 animate-pulse"
+                : "bg-[var(--glass-surface-subtle)] border border-[var(--island-border)] text-[var(--text-main)] hover:border-[var(--text-muted)] active:scale-95"
+            }`}
+            title={isListening ? "Stop voice dictation" : "Voice dictation"}
+          >
+            <Mic className="w-3.5 h-3.5 opacity-80" />
+          </button>
+
+          {/* Execute Button */}
           <button
             type="button"
             onClick={() => onSend(value, researchActive)}
             disabled={disabled || !value.trim() || isEnhancing}
-            className="h-8 px-3.5 rounded-lg flex items-center gap-1.5 bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer font-bold shadow-xs text-[12px]"
+            className="h-7.5 px-3 rounded-lg flex items-center gap-1 bg-[var(--accent-primary)] text-white hover:brightness-110 active:scale-95 disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer font-bold shadow-xs text-[11.5px]"
+            title="Send query (Enter)"
           >
-            <span>Execute</span>
+            <span>Ask</span>
             <ArrowUp className="w-3.5 h-3.5 stroke-[2.5]" />
           </button>
         </div>

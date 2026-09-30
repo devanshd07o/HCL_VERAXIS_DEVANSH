@@ -127,6 +127,81 @@ def format_markdown_table(headers: List[str], rows: List[List[Any]]) -> str:
     return "\n".join([header_line, divider_line] + data_lines)
 
 
+def normalize_math_and_prose(text: str) -> str:
+    """
+    Sanitizes LLM markdown output to ensure bulletproof LaTeX and typography:
+    - Protects true block equations: \\[ ... \\] and $$ ... $$
+    - Converts chemical subscripts like Li$_{7}$La$_{3}$Zr$_{2}$O$_{12}$ to clean scientific Unicode subscripts: Li₇La₃Zr₂O₁₂
+    - Normalizes superscript exponents: 10^{-6} -> 10⁻⁶, cm^{-2} -> cm⁻², m^{1/2} -> m½
+    - Replaces naked TeX macros in prose & tables: \\le -> ≤, \\ge -> ≥, \\approx -> ≈, \\times -> ×, \\pm -> ±, \\cdot -> ·, \\mu -> μ, \\Omega -> Ω, \\text{...} -> ...
+    - Fixes naked dollar signs in table cells (e.g. '30$' -> '$30')
+    - Restores protected block math intact
+    """
+    if not text:
+        return ""
+
+    blocks = []
+    def save_block(m):
+        blocks.append(m.group(0))
+        return f"__MATH_BLOCK_{len(blocks)-1}__"
+
+    # Save true block equations so their internal LaTeX syntax is preserved
+    clean = re.sub(r'(\\\[[\s\S]*?\\\]|\$\$[\s\S]*?\$\$)', save_block, text)
+
+    sub_map = str.maketrans('0123456789+-=', '₀₁₂₃₄₅₆₇₈₉₊₋₌')
+    sup_map = str.maketrans('0123456789+-=', '⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼')
+
+    # Convert chemical subscripts like Li$_{7}$, Li_{7}, Li_3
+    clean = re.sub(
+        r'([A-Z][a-z]?)(?:\$_\{?(\d+)\}?\$|_\{?(\d+)\}?|\b_(\d+)\b)',
+        lambda m: m.group(1) + (m.group(2) or m.group(3) or m.group(4) or '').translate(sub_map),
+        clean
+    )
+
+    # Convert common scientific superscripts like 10^{-6}, 10^{-7}, cm^{-2}, m^{1/2}
+    def replace_sup(m):
+        base = m.group(1)
+        val = m.group(2)
+        if val == '1/2':
+            return f"{base}½"
+        if val.startswith('-'):
+            return f"{base}⁻" + val[1:].translate(sup_map)
+        return f"{base}" + val.translate(sup_map)
+
+    clean = re.sub(r'([a-zA-Z0-9]+)\^\{?(-?\d+|1/2)\}?', replace_sup, clean)
+
+    # Strip / replace naked TeX macros in regular prose and markdown tables
+    replacements = [
+        (r'\\le\b', '≤'),
+        (r'\\ge\b', '≥'),
+        (r'\\approx\b', '≈'),
+        (r'\\times\b', '×'),
+        (r'\\pm\b', '±'),
+        (r'\\cdot\b', '·'),
+        (r'\\mu\b', 'μ'),
+        (r'\\alpha\b', 'α'),
+        (r'\\beta\b', 'β'),
+        (r'\\gamma\b', 'γ'),
+        (r'\\sigma\b', 'σ'),
+        (r'\\Omega\b', 'Ω'),
+        (r'\\text\{([^}]+)\}', r'\1'),
+        (r'\\([ ]+)', ' '),
+        (r'\\,', ' '),
+    ]
+    for pattern, rep in replacements:
+        clean = re.sub(pattern, rep, clean)
+
+    # Fix trailing dollar signs in tables or prices: " 30$" -> " $30", " 120$" -> " $120"
+    clean = re.sub(r'(?<=\s)(\d+(?:\.\d+)?)\$', r'$\1', clean)
+    clean = re.sub(r'([≤≥≈~])\s*(\d+(?:\.\d+)?)\$', r'\1 $\2', clean)
+
+    # Restore protected equations
+    for i, b in enumerate(blocks):
+        clean = clean.replace(f"__MATH_BLOCK_{i}__", b)
+
+    return clean
+
+
 def generate_content_hash(content: str) -> str:
     """Generates a consistent SHA-256 fingerprint for cache keys and verification tracking."""
     return hashlib.sha256(content.encode("utf-8", errors="ignore")).hexdigest()[:16]

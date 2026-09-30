@@ -1,18 +1,13 @@
 import React from "react";
-import { PanelRightClose, PanelRightOpen, Compass, ArrowLeft, Sun, Moon, Radio } from "lucide-react";
-import HoverPill from "./HoverPill";
+import { PanelLeft, Plus, Sun, Moon, Settings } from "lucide-react";
 
 export default function Header({
   sidebarOpen,
   setSidebarOpen,
-  rightPanelOpen,
-  setRightPanelOpen,
   onOpenSettings,
   theme,
   onToggleTheme,
-  hasActiveResearch = false,
   chatTitle = "New Chat",
-  onDoubleClickHeader,
   isInitialMode = true,
   onReturnHome,
 }) {
@@ -27,90 +22,88 @@ export default function Header({
       : "/assets/veraxis_name_dark.png";
 
   return (
-    <header
-      onDoubleClick={onDoubleClickHeader}
-      className="relative w-full h-14 shrink-0 px-3 sm:px-6 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-2xl border-b border-[var(--glass-border)] transition-colors duration-300 select-none"
-    >
-      {/* Brand Anchor */}
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2.5 cursor-pointer" onClick={onReturnHome}>
+    <header className="relative w-full h-13 shrink-0 px-3 sm:px-5 flex items-center justify-between z-40 bg-[var(--glass-surface)] backdrop-blur-xl border-b border-[var(--glass-border)] transition-colors duration-200 select-none">
+      {/* Left Anchor: Sidebar Toggle + Brand Logo + New Chat */}
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen((prev) => !prev)}
+          className={`w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-subtle)] active:scale-95 transition-all cursor-pointer border border-transparent ${
+            sidebarOpen ? "text-[var(--accent-primary)] bg-[var(--highlight-bg)]" : ""
+          }`}
+          title="Toggle Sidebar (Ctrl+B)"
+        >
+          <PanelLeft className="w-4 h-4" />
+        </button>
+
+        <div
+          onClick={onReturnHome}
+          className="flex items-center gap-2 cursor-pointer group"
+          title="Return to Home"
+        >
           <div className="relative flex items-center">
             <img
               src={symbolSrc}
               alt="VERAXIS AI Symbol"
-              className="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-xs select-none"
+              className="w-6 h-6 sm:w-7 sm:h-7 object-contain drop-shadow-xs"
             />
-            <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-[var(--bg-app)] animate-pulse" />
+            <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
           </div>
           <img
             src={nameSrc}
             alt="VERAXIS A.I"
-            className="h-5 sm:h-5.5 w-auto object-contain select-none"
+            className="h-4 sm:h-4.5 w-auto object-contain hidden xs:block"
           />
         </div>
 
-        {/* If inside active dossier or console, show Return to Portal button */}
-        {!isInitialMode && (
-          <button
-            onClick={onReturnHome}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] transition-all cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Portal</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onReturnHome}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-medium text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] active:scale-95 transition-all cursor-pointer ml-1"
+          title="Start New Research Inquiry (Ctrl+K)"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">New Chat</span>
+        </button>
       </div>
 
-      {/* Center Dynamic Status or Title */}
-      <div className="flex-1 flex justify-center px-4 max-w-[500px]">
+      {/* Center Title or Operational Signal */}
+      <div className="flex-1 flex justify-center px-2 max-w-[480px]">
         {isInitialMode ? (
-          <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-[var(--text-muted)]">
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full text-[10.5px] font-mono text-[var(--text-muted)] bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)]">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[var(--text-main)] font-medium">CrewAI Multi-Agent Swarm</span>
-            <span className="opacity-40">•</span>
-            <span>Online</span>
+            <span>Multi-Agent Research Engine</span>
           </div>
         ) : (
-          <span className="text-[13px] sm:text-[13.5px] font-medium text-[var(--text-main)] truncate opacity-90 select-none">
+          <span className="text-[12.5px] sm:text-[13px] font-medium text-[var(--text-main)] truncate opacity-90">
             {chatTitle || "Research Dossier"}
           </span>
         )}
       </div>
 
-      {/* Right Actions: Theme Toggle + Research Inspector Drawer Toggle */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <HoverPill text={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}>
-          <button
-            onClick={onToggleTheme}
-            className="w-9 h-9 rounded-xl flex items-center justify-center border border-[var(--glass-border)] bg-[var(--glass-surface-subtle)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-          >
-            {theme === "dark" ? (
-              <Sun className="w-4 h-4 text-amber-400" />
-            ) : (
-              <Moon className="w-4 h-4 text-slate-700" />
-            )}
-          </button>
-        </HoverPill>
+      {/* Right Controls: Settings + Theme Switcher */}
+      <div className="flex items-center gap-1 sm:gap-1.5">
+        <button
+          type="button"
+          onClick={onOpenSettings}
+          className="w-8 h-8 rounded-lg flex items-center justify-center border border-[var(--glass-border)] bg-[var(--glass-surface-subtle)] text-[var(--text-muted)] hover:text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+          title="Settings & Preferences"
+        >
+          <Settings className="w-3.5 h-3.5" />
+        </button>
 
-        <HoverPill text={rightPanelOpen ? "Close Inspector (Ctrl+I)" : "Open Research Inspector (Ctrl+I)"}>
-          <button
-            onClick={() => setRightPanelOpen(!rightPanelOpen)}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer ${
-              rightPanelOpen
-                ? "bg-[var(--highlight-bg)] border-[var(--accent-primary)]/40 text-[var(--accent-primary)] shadow-xs"
-                : "bg-[var(--glass-surface-subtle)] border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)]"
-            }`}
-          >
-            {rightPanelOpen ? (
-              <PanelRightClose className="w-4 h-4" />
-            ) : (
-              <PanelRightOpen className="w-4 h-4" />
-            )}
-            {hasActiveResearch && !rightPanelOpen && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-[var(--accent-primary)] ring-2 ring-[var(--bg-app)] animate-pulse" />
-            )}
-          </button>
-        </HoverPill>
+        <button
+          type="button"
+          onClick={onToggleTheme}
+          className="w-8 h-8 rounded-lg flex items-center justify-center border border-[var(--glass-border)] bg-[var(--glass-surface-subtle)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {theme === "dark" ? (
+            <Sun className="w-3.5 h-3.5 text-amber-400" />
+          ) : (
+            <Moon className="w-3.5 h-3.5 text-slate-700" />
+          )}
+        </button>
       </div>
     </header>
   );

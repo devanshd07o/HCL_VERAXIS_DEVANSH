@@ -38,7 +38,7 @@ try:
     from backend.tasks import create_discovery_task, create_audit_task, create_synthesis_task
     from backend.pdf_generator import create_pdf_dossier
     from backend.tools import arxiv_academic_search, duckduckgo_web_search
-    from backend.helper import sanitize_filename, validate_system_environment
+    from backend.helper import sanitize_filename, validate_system_environment, normalize_math_and_prose
 except ImportError:
     from config import key_manager
     from router import classify_query_intent, generate_fast_chat_response
@@ -46,7 +46,7 @@ except ImportError:
     from tasks import create_discovery_task, create_audit_task, create_synthesis_task
     from pdf_generator import create_pdf_dossier
     from tools import arxiv_academic_search, duckduckgo_web_search
-    from helper import sanitize_filename, validate_system_environment
+    from helper import sanitize_filename, validate_system_environment, normalize_math_and_prose
 
 from crewai import Crew, Process
 
@@ -615,6 +615,7 @@ async def chat_endpoint(req: ChatRequest):
             temperature=0.2
         )
         dossier_text = res.choices[0].message.content.strip()
+        dossier_text = normalize_math_and_prose(dossier_text)
 
         # Step 3: Generate Publication-Grade ReportLab 4.x PDF
         file_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
