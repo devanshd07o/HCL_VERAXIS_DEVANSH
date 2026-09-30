@@ -566,7 +566,9 @@ async def chat_endpoint(req: ChatRequest):
             "4. ## Commercial Scalability, Unit Economics & Market Feasibility\n"
             "5. ## Strategic Roadmaps & 2026-2030 Milestones\n"
             "6. ## Citations & Open Source Verification Indices\n\n"
-            "Format mathematical formulas cleanly using standard LaTeX delimiters: \\( ... \\) for inline math and \\[ ... \\] for block display math.\n"
+            "CRITICAL LATEX & MATHEMATICAL FORMATTING RULES:\n"
+            "- Wrap ALL inline mathematical expressions, Greek variables, and constants in $...$ (e.g., $e$, $\\gamma_{\\text{eff}}$, $\\Omega_{\\text{Li}}$, $D_{\\text{Li}}$, $t$). Never output bare backslash commands in regular prose without enclosing delimiters.\n"
+            "- Wrap ALL standalone equations in \\[ ... \\] or $$ ... $$ on their own lines.\n"
             "Write with immense technical depth, hard metrics, concrete numbers, and analytical rigor. Zero fluff."
         )
 

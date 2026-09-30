@@ -17,7 +17,8 @@ import {
   ExternalLink,
   BookOpen,
   Cpu,
-  Layers
+  Layers,
+  FastForward,
 } from "lucide-react";
 
 export default function ChatStream({
@@ -186,9 +187,66 @@ export default function ChatStream({
   );
 }
 
-// Typewriter Streaming Component for Bot Responses
+// ==============================================================================
+// TYPEWRITER STREAMING WITH BACKGROUND BUFFER & DELIMITER-AWARE REVEAL
+// ==============================================================================
+function getSafeSlice(fullText, length) {
+  let target = Math.min(length, fullText.length);
+  if (target >= fullText.length) {
+    return { slice: fullText, target: fullText.length };
+  }
+
+  let slice = fullText.slice(0, target);
+
+  // 1. Math Block \[ ... \] safety: don't chop midway inside equation
+  const openBracket = (slice.match(/\\\[/g) || []).length;
+  const closeBracket = (slice.match(/\\\]/g) || []).length;
+  if (openBracket > closeBracket) {
+    const closeIdx = fullText.indexOf("\\]", target);
+    if (closeIdx !== -1) {
+      target = closeIdx + 2;
+      slice = fullText.slice(0, target);
+    }
+  }
+
+  // 2. Math Block $$ ... $$ safety
+  const doubleDollars = (slice.match(/\$\$/g) || []).length;
+  if (doubleDollars % 2 !== 0) {
+    const closeIdx = fullText.indexOf("$$", target);
+    if (closeIdx !== -1) {
+      target = closeIdx + 2;
+      slice = fullText.slice(0, target);
+    }
+  }
+
+  // 3. Inline Math $ ... $ safety
+  const singleDollars = (slice.replace(/\$\$/g, "").match(/(?<!\\)\$/g) || []).length;
+  if (singleDollars % 2 !== 0) {
+    const closeIdx = fullText.indexOf("$", target);
+    if (closeIdx !== -1) {
+      target = closeIdx + 1;
+      slice = fullText.slice(0, target);
+    }
+  }
+
+  // 4. Code Block ``` ... ``` safety
+  const codeFences = (slice.match(/```/g) || []).length;
+  if (codeFences % 2 !== 0) {
+    const closeIdx = fullText.indexOf("```", target);
+    if (closeIdx !== -1) {
+      target = closeIdx + 3;
+      slice = fullText.slice(0, target);
+    }
+  }
+
+  return { slice, target };
+}
+
 function TypewriterStreamContent({ fullText, onComplete }) {
   const [displayedLength, setDisplayedLength] = useState(0);
+  const bufferRef = useRef(fullText);
+  bufferRef.current = fullText;
+
   const isFinished = displayedLength >= fullText.length;
 
   useEffect(() => {
@@ -197,36 +255,50 @@ function TypewriterStreamContent({ fullText, onComplete }) {
       return;
     }
 
-    // High speed streaming reveal: ~20-25 chars per tick (16ms)
-    const chunkSize = Math.max(15, Math.floor(fullText.length / 150));
+    // Dynamic, butter-smooth reveal pace:
+    // Base step ~12-25 chars per tick (16ms = ~60fps)
+    const stepSize = Math.max(14, Math.floor(fullText.length / 120));
+
     const interval = setInterval(() => {
       setDisplayedLength((prev) => {
-        const next = prev + chunkSize;
-        if (next >= fullText.length) {
+        const nextRaw = prev + stepSize;
+        const { target } = getSafeSlice(fullText, nextRaw);
+        if (target >= fullText.length) {
           clearInterval(interval);
           onComplete?.();
           return fullText.length;
         }
-        return next;
+        return target;
       });
     }, 16);
 
     return () => clearInterval(interval);
   }, [fullText, onComplete]);
 
-  // Click to reveal full text immediately (skip animation)
-  const handleSkip = () => {
+  // Click to skip typewriter and reveal full content immediately
+  const handleSkip = (e) => {
+    e.stopPropagation();
     setDisplayedLength(fullText.length);
     onComplete?.();
   };
 
-  const currentSlice = fullText.slice(0, displayedLength);
+  const { slice: currentSlice } = getSafeSlice(fullText, displayedLength);
 
   return (
-    <div onClick={handleSkip} title={!isFinished ? "Click to skip animation" : ""} className="relative cursor-pointer">
+    <div className="relative group">
       <FormattedContent text={currentSlice} />
       {!isFinished && (
-        <span className="inline-block w-1.5 h-4 ml-0.5 bg-[var(--accent-primary)] animate-pulse align-middle" />
+        <div className="inline-flex items-center gap-2 mt-1">
+          <span className="inline-block w-2 h-4 bg-[var(--accent-primary)] animate-pulse align-middle rounded-xs" />
+          <button
+            onClick={handleSkip}
+            className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--accent-primary)] hover:underline opacity-60 hover:opacity-100 transition-opacity cursor-pointer ml-2"
+            title="Click to reveal complete text instantly"
+          >
+            <FastForward className="w-3 h-3" />
+            <span>Skip animation</span>
+          </button>
+        </div>
       )}
     </div>
   );
@@ -271,6 +343,7 @@ function CopyButton({ text }) {
 // KaTeX Math Formula Component
 function MathFormula({ math, displayMode = false }) {
   const html = useMemo(() => {
+    if (!math || !math.trim()) return null;
     try {
       return katex.renderToString(math.trim(), {
         displayMode,
@@ -287,173 +360,329 @@ function MathFormula({ math, displayMode = false }) {
 
   return (
     <span
-      className={displayMode ? "block my-2 overflow-x-auto text-center py-1" : "inline-block px-0.5"}
+      className={
+        displayMode
+          ? "block my-3 px-3 py-2.5 rounded-xl bg-[var(--island-bg)] border border-white/[0.06] overflow-x-auto text-center shadow-xs"
+          : "inline-block px-0.5 align-middle"
+      }
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
+}
+
+// ==============================================================================
+// GOD-LEVEL MARKDOWN & MULTI-LINE KATEX PARSER
+// ==============================================================================
+
+function parseBlocks(text) {
+  if (!text) return [];
+  const clean = text.replace(/\r\n/g, "\n");
+  const lines = clean.split("\n");
+  const blocks = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // 1. Code Block: ```lang
+    if (trimmed.startsWith("```")) {
+      const lang = trimmed.slice(3).trim();
+      const codeLines = [];
+      i++;
+      while (i < lines.length && !lines[i].trim().startsWith("```")) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+      i++; // skip closing ```
+      blocks.push({ type: "code", language: lang, content: codeLines.join("\n") });
+      continue;
+    }
+
+    // 2. Multi-line or Single-line Math Block: \[ ... \]
+    if (trimmed.startsWith("\\[")) {
+      const mathLines = [];
+      let current = trimmed.slice(2);
+      if (current.includes("\\]")) {
+        // Single line \[ ... \]
+        const mathContent = current.slice(0, current.indexOf("\\]")).trim();
+        blocks.push({ type: "math_block", content: mathContent });
+        i++;
+        continue;
+      }
+      if (current.trim()) mathLines.push(current);
+      i++;
+      while (i < lines.length) {
+        const nextLine = lines[i];
+        const nextTrim = nextLine.trim();
+        if (nextTrim.includes("\\]")) {
+          const beforeClose = nextTrim.slice(0, nextTrim.indexOf("\\]")).trim();
+          if (beforeClose) mathLines.push(beforeClose);
+          i++;
+          break;
+        } else {
+          mathLines.push(nextLine);
+          i++;
+        }
+      }
+      blocks.push({ type: "math_block", content: mathLines.join("\n").trim() });
+      continue;
+    }
+
+    // 3. Multi-line or Single-line Math Block: $$ ... $$
+    if (trimmed.startsWith("$$")) {
+      const afterOpen = trimmed.slice(2);
+      if (afterOpen.includes("$$")) {
+        // Single line $$ ... $$
+        const mathContent = afterOpen.slice(0, afterOpen.indexOf("$$")).trim();
+        blocks.push({ type: "math_block", content: mathContent });
+        i++;
+        continue;
+      }
+      const mathLines = [];
+      if (afterOpen.trim()) mathLines.push(afterOpen);
+      i++;
+      while (i < lines.length) {
+        const nextLine = lines[i];
+        const nextTrim = nextLine.trim();
+        if (nextTrim.includes("$$")) {
+          const beforeClose = nextTrim.slice(0, nextTrim.indexOf("$$")).trim();
+          if (beforeClose) mathLines.push(beforeClose);
+          i++;
+          break;
+        } else {
+          mathLines.push(nextLine);
+          i++;
+        }
+      }
+      blocks.push({ type: "math_block", content: mathLines.join("\n").trim() });
+      continue;
+    }
+
+    // 4. LaTeX Environment: \begin{equation} or \begin{align}
+    if (/^\\begin\{(equation\*?|align\*?|gather\*?|multline\*?)\}/.test(trimmed)) {
+      const envMatch = trimmed.match(/^\\begin\{([^}]+)\}/);
+      const envName = envMatch ? envMatch[1] : "equation";
+      const mathLines = [trimmed];
+      i++;
+      const endTag = `\\end{${envName}}`;
+      while (i < lines.length) {
+        mathLines.push(lines[i]);
+        if (lines[i].includes(endTag)) {
+          i++;
+          break;
+        }
+        i++;
+      }
+      blocks.push({ type: "math_block", content: mathLines.join("\n").trim() });
+      continue;
+    }
+
+    // 5. Table Block: lines with | ... |
+    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+      const tableLines = [trimmed];
+      i++;
+      while (i < lines.length && lines[i].trim().startsWith("|") && lines[i].trim().endsWith("|")) {
+        tableLines.push(lines[i].trim());
+        i++;
+      }
+      blocks.push({ type: "table", lines: tableLines });
+      continue;
+    }
+
+    // 6. Heading: #, ##, ###, ####
+    if (trimmed.startsWith("#")) {
+      const levelMatch = trimmed.match(/^(#{1,6})\s+(.*)/);
+      if (levelMatch) {
+        blocks.push({ type: "heading", level: levelMatch[1].length, content: levelMatch[2] });
+        i++;
+        continue;
+      }
+    }
+
+    // 7. Ordered List
+    const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+    if (numMatch) {
+      blocks.push({ type: "list_num", number: numMatch[1], content: numMatch[2] });
+      i++;
+      continue;
+    }
+
+    // 8. Bullet List
+    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      blocks.push({ type: "list_bullet", content: trimmed.slice(2) });
+      i++;
+      continue;
+    }
+
+    // 9. Blockquote
+    if (trimmed.startsWith("> ")) {
+      blocks.push({ type: "quote", content: trimmed.slice(2) });
+      i++;
+      continue;
+    }
+
+    // 10. Empty line
+    if (!trimmed) {
+      blocks.push({ type: "empty" });
+      i++;
+      continue;
+    }
+
+    // 11. Normal paragraph
+    blocks.push({ type: "paragraph", content: line });
+    i++;
+  }
+
+  return blocks;
 }
 
 // Markdown Formatter with KaTeX LaTeX Support
 function FormattedContent({ text }) {
   if (!text) return null;
 
-  const lines = text.split("\n");
-  const rendered = [];
-  let inCode = false;
-  let codeBuffer = [];
-  let codeLang = "";
-  let inTable = false;
-  let tableBuffer = [];
+  const blocks = parseBlocks(text);
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
+  return (
+    <>
+      {blocks.map((block, i) => {
+        switch (block.type) {
+          case "code":
+            return (
+              <div key={i} className="my-2">
+                <CodeBlock code={block.content} language={block.language} />
+              </div>
+            );
 
-    // Code Fence
-    if (trimmed.startsWith("```")) {
-      if (!inCode) {
-        inCode = true;
-        codeLang = trimmed.replace("```", "").trim();
-        codeBuffer = [];
-      } else {
-        inCode = false;
-        rendered.push(
-          <div key={`code-${i}`} className="my-2">
-            <CodeBlock code={codeBuffer.join("\n")} language={codeLang} />
-          </div>
-        );
-      }
-      continue;
-    }
+          case "math_block":
+            return (
+              <div key={i} className="my-2.5">
+                <MathFormula math={block.content} displayMode={true} />
+              </div>
+            );
 
-    if (inCode) {
-      codeBuffer.push(line);
-      continue;
-    }
+          case "table":
+            return (
+              <div key={i} className="my-2">
+                <CleanTable lines={block.lines} />
+              </div>
+            );
 
-    // Standalone LaTeX Block Math: \[ ... \] or $$ ... $$
-    if (
-      (trimmed.startsWith("\\[") && trimmed.endsWith("\\]")) ||
-      (trimmed.startsWith("$$") && trimmed.endsWith("$$"))
-    ) {
-      const mathContent = trimmed.startsWith("\\[")
-        ? trimmed.slice(2, -2)
-        : trimmed.slice(2, -2);
-      rendered.push(
-        <div key={`math-block-${i}`} className="my-2.5 p-2 rounded-lg bg-[var(--island-bg)] border border-white/[0.05] overflow-x-auto">
-          <MathFormula math={mathContent} displayMode={true} />
-        </div>
-      );
-      continue;
-    }
+          case "heading":
+            if (block.level === 1) {
+              return (
+                <h1
+                  key={i}
+                  className="text-lg sm:text-xl font-bold text-[var(--text-main)] mt-5 mb-2.5 tracking-tight border-b border-white/[0.06] pb-1.5"
+                >
+                  {parseInline(block.content)}
+                </h1>
+              );
+            }
+            if (block.level === 2) {
+              return (
+                <h2
+                  key={i}
+                  className="text-[16px] sm:text-lg font-semibold text-[var(--accent-primary)] mt-4 mb-2 tracking-tight flex items-center gap-2"
+                >
+                  <span className="w-1.5 h-3.5 bg-[var(--accent-primary)] rounded-full shrink-0" />
+                  <span>{parseInline(block.content)}</span>
+                </h2>
+              );
+            }
+            return (
+              <h3
+                key={i}
+                className="text-[14.5px] sm:text-[15px] font-semibold text-[var(--text-main)] mt-3.5 mb-1.5"
+              >
+                {parseInline(block.content)}
+              </h3>
+            );
 
-    // Markdown Table Detection
-    if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
-      if (!inTable) {
-        inTable = true;
-        tableBuffer = [];
-      }
-      tableBuffer.push(trimmed);
-      continue;
-    } else if (inTable) {
-      inTable = false;
-      rendered.push(
-        <div key={`table-${i}`} className="my-2">
-          <CleanTable lines={tableBuffer} />
-        </div>
-      );
-      tableBuffer = [];
-    }
+          case "list_num":
+            return (
+              <div key={i} className="flex items-start gap-2.5 my-1.5">
+                <span className="w-5 h-5 rounded-full bg-[var(--highlight-bg)] text-[var(--accent-primary)] text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                  {block.number}
+                </span>
+                <span className="text-[var(--text-main)] leading-relaxed">
+                  {parseInline(block.content)}
+                </span>
+              </div>
+            );
 
-    // Headings
-    if (trimmed.startsWith("# ")) {
-      rendered.push(
-        <h1
-          key={i}
-          className="text-lg sm:text-xl font-bold text-[var(--text-main)] mt-4 mb-2 tracking-tight"
-        >
-          {parseInline(trimmed.substring(2))}
-        </h1>
-      );
-      continue;
-    }
-    if (trimmed.startsWith("## ")) {
-      rendered.push(
-        <h2
-          key={i}
-          className="text-[16px] sm:text-lg font-semibold text-[var(--accent-primary)] mt-3.5 mb-1.5 tracking-tight"
-        >
-          {parseInline(trimmed.substring(3))}
-        </h2>
-      );
-      continue;
-    }
-    if (trimmed.startsWith("### ")) {
-      rendered.push(
-        <h3
-          key={i}
-          className="text-[14.5px] sm:text-[15px] font-semibold text-[var(--text-main)] mt-3 mb-1"
-        >
-          {parseInline(trimmed.substring(4))}
-        </h3>
-      );
-      continue;
-    }
+          case "list_bullet":
+            return (
+              <div key={i} className="flex items-start gap-2.5 my-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shrink-0 mt-2" />
+                <span className="text-[var(--text-main)] leading-relaxed">
+                  {parseInline(block.content)}
+                </span>
+              </div>
+            );
 
-    // Numbered List
-    const numMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
-    if (numMatch) {
-      rendered.push(
-        <div key={i} className="flex items-start gap-2.5 my-1.5">
-          <span className="w-5 h-5 rounded-full bg-[var(--highlight-bg)] text-[var(--accent-primary)] text-[11px] font-bold flex items-center justify-center shrink-0 mt-0.5">
-            {numMatch[1]}
-          </span>
-          <span className="text-[var(--text-main)]">{parseInline(numMatch[2])}</span>
-        </div>
-      );
-      continue;
-    }
+          case "quote":
+            return (
+              <div
+                key={i}
+                className="my-2 px-3.5 py-2 border-l-2 border-[var(--accent-primary)] bg-[var(--island-bg)]/60 rounded-r-lg text-[var(--text-muted)] italic text-[13.5px]"
+              >
+                {parseInline(block.content)}
+              </div>
+            );
 
-    // Bullet List
-    if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-      rendered.push(
-        <div key={i} className="flex items-start gap-2.5 my-1">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-primary)] shrink-0 mt-2" />
-          <span className="text-[var(--text-main)]">{parseInline(trimmed.substring(2))}</span>
-        </div>
-      );
-      continue;
-    }
+          case "empty":
+            return <div key={i} className="h-2" />;
 
-    // Blank line
-    if (!trimmed) {
-      rendered.push(<div key={i} className="h-2" />);
-      continue;
-    }
+          case "paragraph":
+          default:
+            return (
+              <p key={i} className="my-1.5 leading-relaxed">
+                {parseInline(block.content)}
+              </p>
+            );
+        }
+      })}
+    </>
+  );
+}
 
-    // Standard Paragraph
-    rendered.push(
-      <p key={i} className="my-1.5 leading-relaxed">
-        {parseInline(line)}
-      </p>
-    );
+// Normalizes unescaped bare LaTeX tokens outside of existing math delimiters
+function autoWrapBareLatex(str) {
+  if (!str) return "";
+
+  // Split by existing delimiters to protect them
+  const parts = [];
+  const mathRegex = /(\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$\$[\s\S]*?\$\$|(?<!\\)\$[^\$\n]+\$|`[^`]+`)/g;
+  let lastIdx = 0;
+  let m;
+
+  while ((m = mathRegex.exec(str)) !== null) {
+    if (m.index > lastIdx) {
+      parts.push({ isMath: false, text: str.substring(lastIdx, m.index) });
+    }
+    parts.push({ isMath: true, text: m[0] });
+    lastIdx = mathRegex.lastIndex;
+  }
+  if (lastIdx < str.length) {
+    parts.push({ isMath: false, text: str.substring(lastIdx) });
   }
 
-  // Flush trailing table
-  if (inTable && tableBuffer.length > 0) {
-    rendered.push(
-      <div key="table-end" className="my-2">
-        <CleanTable lines={tableBuffer} />
-      </div>
-    );
-  }
+  // Common Greek letters or physics variables that models often output bare
+  const bareTeXRegex = /(\\(?:alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|omicron|pi|rho|sigma|tau|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)(?:(?:\{(?:[^{}]+|\{[^{}]*\})*\}|_[a-zA-Z0-9]+|_\{(?:[^{}]+|\{[^{}]*\})*\}|\^[a-zA-Z0-9]+|\^\{(?:[^{}]+|\{[^{}]*\})*\})*))/g;
 
-  return <>{rendered}</>;
+  return parts
+    .map((p) => {
+      if (p.isMath) return p.text;
+      return p.text.replace(bareTeXRegex, (match) => `$${match}$`);
+    })
+    .join("");
 }
 
 // Inline Parser with KaTeX LaTeX Support
-function parseInline(text) {
-  if (!text) return null;
+function parseInline(rawText) {
+  if (!rawText) return null;
+  const text = autoWrapBareLatex(rawText);
   const parts = [];
 
   // Matches:
