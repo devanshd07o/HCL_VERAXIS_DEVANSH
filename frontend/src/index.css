@@ -2,78 +2,80 @@
 @import "tailwindcss";
 
 :root {
-  /* LIGHTENED LUXURY GRAPHITE SLATE (Linear / Claude 3.5 Daylight-Softened Dark) */
-  --bg-app: #18191D;
-  --island-bg: #212229;
-  --island-border: rgba(255, 255, 255, 0.10);
-  --island-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.40), 0 4px 14px rgba(0, 0, 0, 0.25);
+  /* TACTILE SMOKED TITANIUM & SIGNAL AMBER (No Cyan/Purple Neon Slop) */
+  --bg-app: #111215;
+  --island-bg: #18191E;
+  --island-border: rgba(255, 255, 255, 0.08);
+  --island-shadow: 0 16px 36px -8px rgba(0, 0, 0, 0.50), 0 4px 14px rgba(0, 0, 0, 0.30);
   
-  --glass-surface: #212229;
-  --glass-surface-subtle: #292A33;
-  --glass-border: rgba(255, 255, 255, 0.10);
-  --glass-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
-  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.08);
+  --glass-surface: #18191E;
+  --glass-surface-subtle: #20222A;
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 14px 30px rgba(0, 0, 0, 0.40);
+  --glass-inset: inset 1px 1px 1px rgba(255, 255, 255, 0.05);
   
-  --text-main: #F4F4F7;
-  --text-muted: #A3A4B2;
-  --accent-cyan: #38BDF8;
+  --text-main: #F4F4F6;
+  --text-muted: #8E909D;
+  --accent-cyan: #FF5C00; /* Signal Laboratory Amber replaces generic cyan */
+  --accent-primary: #FF5C00;
   --accent-blue: #3B82F6;
   --accent-indigo: #6366F1;
   --accent-emerald: #10B981;
-  --accent-amber: #F59E0B;
+  --accent-amber: #FF5C00;
   
-  --sidebar-bg: #1C1D24;
-  --input-dock-bg: #272832;
-  --input-border: rgba(255, 255, 255, 0.16);
-  --input-border-hover: rgba(255, 255, 255, 0.28);
-  --input-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.40), 0 2px 10px rgba(0, 0, 0, 0.25);
+  --sidebar-bg: #15161B;
+  --input-dock-bg: #1B1C22;
+  --input-border: rgba(255, 255, 255, 0.12);
+  --input-border-hover: rgba(255, 255, 255, 0.24);
+  --input-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.45), 0 2px 10px rgba(0, 0, 0, 0.30);
   
-  --highlight-bg: rgba(99, 102, 241, 0.14);
-  --highlight-text: #818CF8;
+  --highlight-bg: rgba(255, 92, 0, 0.12);
+  --highlight-text: #FF7A29;
   --base-font-size: 15px;
 
-  /* Suggestions Chips Tokens */
-  --chip-bg: #23242D;
-  --chip-border: rgba(255, 255, 255, 0.10);
-  --chip-hover-bg: #2D2E3A;
-  --chip-hover-border: rgba(99, 102, 241, 0.40);
+  /* Suggestions & Empirical Chips Tokens */
+  --chip-bg: #1D1E25;
+  --chip-border: rgba(255, 255, 255, 0.08);
+  --chip-hover-bg: #252731;
+  --chip-hover-border: rgba(255, 92, 0, 0.35);
 }
 
 [data-theme="light"] {
-  /* SILK ALABASTER & WARM QUARTZ (Luxury Claude/Perplexity Daylight Aesthetic) */
-  --bg-app: #F8F9FA;
+  /* WARM BONE & REFINED CHARCOAL (Editorial Swiss Research Style) */
+  --bg-app: #F7F8FA;
   --island-bg: #FFFFFF;
   --island-border: rgba(0, 0, 0, 0.08);
-  --island-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.08), 0 2px 6px rgba(15, 23, 42, 0.03);
+  --island-shadow: 0 14px 30px -8px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.02);
   
   --glass-surface: #FFFFFF;
-  --glass-surface-subtle: #F1F3F7;
+  --glass-surface-subtle: #F0F2F5;
   --glass-border: rgba(0, 0, 0, 0.08);
-  --glass-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  --glass-shadow: 0 12px 28px rgba(0, 0, 0, 0.04);
   --glass-inset: inset 1px 1px 2px rgba(255, 255, 255, 1);
   
-  --text-main: #0F172A;
-  --text-muted: #64748B;
-  --accent-cyan: #0284C7;
+  --text-main: #0F1115;
+  --text-muted: #606470;
+  --accent-cyan: #EA580C;
+  --accent-primary: #EA580C;
   --accent-blue: #2563EB;
   --accent-indigo: #4F46E5;
   --accent-emerald: #059669;
-  --accent-amber: #D97706;
+  --accent-amber: #EA580C;
   
   --sidebar-bg: #FFFFFF;
   --input-dock-bg: #FFFFFF;
   --input-border: rgba(0, 0, 0, 0.12);
-  --input-border-hover: rgba(0, 0, 0, 0.22);
-  --input-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.03);
+  --input-border-hover: rgba(0, 0, 0, 0.24);
+  --input-shadow: 0 10px 28px -4px rgba(0, 0, 0, 0.06), 0 2px 6px rgba(0, 0, 0, 0.02);
 
-  --highlight-bg: rgba(79, 70, 229, 0.08);
-  --highlight-text: #4F46E5;
+  --highlight-bg: rgba(234, 88, 12, 0.08);
+  --highlight-text: #EA580C;
 
-  /* Suggestions Chips Tokens */
+  /* Suggestions & Empirical Chips Tokens */
   --chip-bg: #FFFFFF;
   --chip-border: rgba(0, 0, 0, 0.08);
-  --chip-hover-bg: #F1F3F9;
-  --chip-hover-border: rgba(79, 70, 229, 0.30);
+  --chip-hover-bg: #F1F3F7;
+  --chip-hover-border: rgba(234, 88, 12, 0.35);
 }
 
 *, *::before, *::after {
@@ -109,8 +111,8 @@ html, body {
 }
 
 .liquid-glass-input:focus-within {
-  border-color: rgba(99, 102, 241, 0.70) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.18), var(--input-shadow) !important;
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 2px rgba(255, 92, 0, 0.20), var(--input-shadow) !important;
 }
 
 /* ============================================================================
@@ -123,8 +125,8 @@ html, body {
 }
 
 @keyframes beacon-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5); }
-  50% { box-shadow: 0 0 0 6px rgba(56, 189, 248, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 92, 0, 0.5); }
+  50% { box-shadow: 0 0 0 5px rgba(255, 92, 0, 0); }
 }
 
 @keyframes shimmer-slide {

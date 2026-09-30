@@ -82,6 +82,7 @@ if os.path.exists(WEB_DIR):
 
 class ChatRequest(BaseModel):
     query: str
+    mode: str = "auto"
 
 class TitleRequest(BaseModel):
     messages: List[Dict[str, Any]]
@@ -401,10 +402,17 @@ async def chat_endpoint(req: ChatRequest):
     if not user_query:
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
 
-    # 1. High-Precision Intent Classification
-    intent_data = classify_query_intent(user_query)
-    intent = intent_data.get("intent", "GENERAL_CHAT")
-    extracted_topic = intent_data.get("extracted_topic", user_query)
+    # 1. High-Precision Intent Classification with explicit override
+    if req.mode == "fast":
+        intent = "GENERAL_CHAT"
+        extracted_topic = user_query
+    elif req.mode == "deep":
+        intent = "DEEP_RESEARCH"
+        extracted_topic = user_query
+    else:
+        intent_data = classify_query_intent(user_query)
+        intent = intent_data.get("intent", "GENERAL_CHAT")
+        extracted_topic = intent_data.get("extracted_topic", user_query)
 
     # Internal Query Rephrasing for Deep Research to ensure optimal multi-agent search coverage
     if intent == "DEEP_RESEARCH":

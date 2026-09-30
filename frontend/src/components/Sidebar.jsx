@@ -9,6 +9,7 @@ import {
   PanelLeftOpen,
   Sun,
   Moon,
+  Clock,
 } from "lucide-react";
 import HoverPill from "./HoverPill";
 

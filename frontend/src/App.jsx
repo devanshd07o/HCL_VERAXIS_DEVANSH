@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import RightInspector from "./components/RightInspector";
-import HeroCenter from "./components/HeroCenter";
+import HomepagePortal from "./components/HomepagePortal";
 import ChatStream from "./components/ChatStream";
-import LiquidGlassInput from "./components/LiquidGlassInput";
+import CommandBay from "./components/CommandBay";
 import SettingsModal from "./components/SettingsModal";
 
 const SESSIONS_KEY = "veraxis_sessions";
@@ -75,6 +75,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [executionMode, setExecutionMode] = useState("deep");
 
   // Dynamic AI Suggestions state (2 fresh topics)
   const [dynamicSuggestions, setDynamicSuggestions] = useState([
@@ -196,10 +197,11 @@ export default function App() {
   }, [messages, isLoading]);
 
   // Send Query Handler with 2-Stage AI Title Renaming
-  const handleSendQuery = async (queryText) => {
+  const handleSendQuery = async (queryText, modeOverride) => {
     const text = (queryText || inputValue).trim();
     if (!text || isLoading) return;
 
+    const activeMode = modeOverride || executionMode;
     setInputValue("");
     setIsLoading(true);
 
@@ -247,7 +249,7 @@ export default function App() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: text }),
+        body: JSON.stringify({ query: text, mode: activeMode }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -327,6 +329,8 @@ export default function App() {
         hasActiveResearch={Boolean(activeResearchData)}
         chatTitle={chatTitle}
         onDoubleClickHeader={() => setSidebarOpen((prev) => !prev)}
+        isInitialMode={isInitialMode}
+        onReturnHome={handleNewSession}
       />
 
       {/* App Stage & Shell with 3-Column Studio Grid */}
@@ -377,25 +381,30 @@ export default function App() {
           } ${rightPanelOpen ? "xl:pr-[430px]" : "pr-0"}`}
         >
           {isInitialMode ? (
-            /* CENTERED LANDING HERO STATE */
-            <div className="flex-1 flex items-center justify-center p-3 sm:p-4 overflow-y-auto stage-scroll-container">
-              <HeroCenter
+            /* MISSION CONTROL HOMEPAGE WORKBENCH */
+            <div className="flex-1 flex flex-col items-center justify-start p-3 sm:p-6 overflow-y-auto stage-scroll-container">
+              <HomepagePortal
                 value={inputValue}
                 onChange={setInputValue}
                 onSend={handleSendQuery}
                 disabled={isLoading}
                 suggestions={dynamicSuggestions}
-                widthClass={activeWidthClass}
+                mode={executionMode}
+                setMode={setExecutionMode}
                 theme={theme}
+                onSelectTopic={(topicQuery) => {
+                  setInputValue(topicQuery);
+                  handleSendQuery(topicQuery, "deep");
+                }}
               />
             </div>
           ) : (
-            /* ACTIVE CHAT WORKSPACE & FLOATING LIQUID GLASS DOCK */
+            /* ACTIVE DOSSIER WORKSPACE & FLOATING WORKBENCH DOCK */
             <div className="relative flex-1 h-full overflow-hidden">
               {/* Scrollable Messages Stream */}
               <div
                 ref={stageRef}
-                className="w-full h-full overflow-y-auto stage-scroll-container px-2 sm:px-4 pt-4 pb-28 sm:pb-32"
+                className="w-full h-full overflow-y-auto stage-scroll-container px-2 sm:px-4 pt-4 pb-32 sm:pb-36"
               >
                 <ChatStream
                   messages={messages}
@@ -408,15 +417,17 @@ export default function App() {
                 />
               </div>
 
-              {/* Floating Input Dock */}
-              <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none flex justify-center px-3 sm:px-6 pb-4 sm:pb-6 pt-8 bg-gradient-to-t from-[var(--bg-app)] via-[var(--bg-app)]/85 to-transparent">
+              {/* Floating Dock Command Bay */}
+              <div className="absolute bottom-0 left-0 right-0 z-20 pointer-events-none flex justify-center px-3 sm:px-6 pb-3 sm:pb-5 pt-8 bg-gradient-to-t from-[var(--bg-app)] via-[var(--bg-app)]/90 to-transparent">
                 <div className={`w-full ${activeWidthClass} pointer-events-auto`}>
-                  <LiquidGlassInput
+                  <CommandBay
                     value={inputValue}
                     onChange={setInputValue}
                     onSend={handleSendQuery}
                     disabled={isLoading}
-                    widthClass="w-full"
+                    mode={executionMode}
+                    setMode={setExecutionMode}
+                    variant="dock"
                     theme={theme}
                   />
                 </div>
