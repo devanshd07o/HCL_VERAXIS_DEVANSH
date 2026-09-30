@@ -6,6 +6,7 @@ import HomepagePortal from "./components/HomepagePortal";
 import ChatStream from "./components/ChatStream";
 import CommandBay from "./components/CommandBay";
 import SettingsModal from "./components/SettingsModal";
+import NeuformCanvas from "./components/NeuformCanvas";
 
 const SESSIONS_KEY = "veraxis_sessions";
 
@@ -335,6 +336,8 @@ export default function App() {
 
       {/* App Stage & Shell with 3-Column Studio Grid */}
       <div className="relative flex-1 flex w-full h-[calc(100dvh-56px)] pt-14 overflow-hidden z-10">
+        {isInitialMode && <NeuformCanvas theme={theme} />}
+
         {/* Mobile Backdrop Overlay when Left sidebar is open */}
         {sidebarOpen && (
           <div
