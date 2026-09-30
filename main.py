@@ -82,7 +82,9 @@ def main():
         "backend.main:app",
         host=args.host,
         port=args.port,
-        reload=args.reload
+        reload=args.reload,
+        loop="asyncio",
+        access_log=True
     )
 
 

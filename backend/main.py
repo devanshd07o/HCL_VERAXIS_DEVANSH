@@ -171,6 +171,12 @@ async def get_status_alias():
     return await get_status()
 
 
+@app.get("/voice/greeting")
+async def voice_greeting():
+    """Greeting audio/text endpoint for voice mode."""
+    return {"message": "Welcome to VERAXIS AI. What research topic would you like to explore?"}
+
+
 @app.get("/keys/list")
 async def get_keys_list():
     """Returns active key pool configuration and telemetry."""
