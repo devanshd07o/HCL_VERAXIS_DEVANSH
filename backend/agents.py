@@ -1,12 +1,17 @@
 """
-MULTIINTEL AI — The 3-Tier Multi-Agent Crew Definitions
+VERAXIS AI — The 3-Tier Multi-Agent Crew Definitions
 Personas for Lead Research Analyst, Forensic Fact-Checker, and Executive Dossier Director.
 """
 
 from typing import Callable, Optional
 from crewai import Agent
-from config import get_llm
-from tools import arxiv_academic_search, duckduckgo_web_search, wikipedia_entity_lookup
+
+try:
+    from backend.config import get_llm
+    from backend.tools import arxiv_academic_search, duckduckgo_web_search, wikipedia_entity_lookup
+except ImportError:
+    from config import get_llm
+    from tools import arxiv_academic_search, duckduckgo_web_search, wikipedia_entity_lookup
 
 def create_lead_researcher(
     step_callback: Optional[Callable] = None,

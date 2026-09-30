@@ -1,0 +1,88 @@
+{
+  "project": "VERAXIS AI",
+  "version": "3.0.0",
+  "description": "Autonomous Multi-Agent Scientific Research & Strategic Intelligence Engine",
+  "research_domains": [
+    {
+      "id": "energy_storage",
+      "category": "CleanTech & Energy",
+      "topics": [
+        {
+          "label": "Solid-State Batteries 2028",
+          "query": "Commercial viability of solid-state EV batteries by 2028 with ceramic electrolyte benchmarks",
+          "tags": ["battery", "ev", "materials-science"]
+        },
+        {
+          "label": "Perovskite Tandem Solar",
+          "query": "Silicon-perovskite tandem photovoltaic degradation mechanisms under accelerated damp heat testing",
+          "tags": ["solar", "photovoltaic", "energy"]
+        }
+      ]
+    },
+    {
+      "id": "biotech_genomics",
+      "category": "Biotechnology & Medicine",
+      "topics": [
+        {
+          "label": "CRISPR-Cas9 In-Vivo Editing",
+          "query": "Clinical trial breakthroughs in CRISPR-Cas9 in vivo base editing for hematological and oncological disorders",
+          "tags": ["crispr", "genomics", "oncology"]
+        },
+        {
+          "label": "mRNA Cancer Vaccines",
+          "query": "Personalized neoantigen mRNA cancer vaccines: Phase 3 clinical trial survival rates",
+          "tags": ["mrna", "vaccines", "immunotherapy"]
+        }
+      ]
+    },
+    {
+      "id": "quantum_deeptech",
+      "category": "Quantum & Advanced Computing",
+      "topics": [
+        {
+          "label": "Post-Quantum Cryptography",
+          "query": "NIST Post-Quantum Cryptography standards: lattice-based Kyber and Dilithium implementation audits",
+          "tags": ["cryptography", "nist", "quantum-security"]
+        },
+        {
+          "label": "Neuromorphic Photonics",
+          "query": "Silicon photonic neuromorphic chips vs standard GPU tensor processors: energy efficiency and throughput",
+          "tags": ["photonics", "neuromorphic", "ai-hardware"]
+        },
+        {
+          "label": "Quantum Error Correction",
+          "query": "Surface code threshold benchmarks in neutral-atom and superconducting quantum computing",
+          "tags": ["quantum-computing", "qec", "fault-tolerance"]
+        }
+      ]
+    },
+    {
+      "id": "neurotech_interfaces",
+      "category": "Neurotechnology",
+      "topics": [
+        {
+          "label": "Brain-Computer Interfaces",
+          "query": "High-density neural lace and intracortical BCI decoding bandwidth for motor restoration",
+          "tags": ["bci", "neuroscience", "neural-lace"]
+        }
+      ]
+    }
+  ],
+  "agent_tiers": [
+    {
+      "name": "Lead Research Analyst",
+      "role": "Discovery Engine",
+      "tools": ["arxiv_academic_search", "duckduckgo_web_search", "wikipedia_entity_lookup"]
+    },
+    {
+      "name": "Forensic Fact-Checker",
+      "role": "Audit Engine",
+      "tools": ["arxiv_academic_search", "duckduckgo_web_search"]
+    },
+    {
+      "name": "Executive Dossier Director",
+      "role": "Synthesis Engine",
+      "tools": []
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 """
-MULTIINTEL AI — Dual-Engine Router & Fast Chat LLM
+VERAXIS AI — Dual-Engine Router & Fast Chat LLM
 1. Intent Classifier: Categorizes user queries into GENERAL_CHAT vs DEEP_RESEARCH.
 2. Fast Chat Engine: Ultra-fast direct conversational responses via Groq LPU.
 """
@@ -7,8 +7,12 @@ MULTIINTEL AI — Dual-Engine Router & Fast Chat LLM
 import json
 import re
 from typing import Dict, Any, List
-from config import key_manager
 from openai import OpenAI
+
+try:
+    from backend.config import key_manager
+except ImportError:
+    from config import key_manager
 
 def get_groq_client() -> OpenAI:
     """Return an OpenAI client configured for Groq with key rotation."""
@@ -26,7 +30,7 @@ def classify_query_intent(query: str, chat_history: List[Dict[str, str]] = None)
     """
     client = get_groq_client()
     system_prompt = (
-        "You are the MultiIntel Autonomous Intent Classifier.\n"
+        "You are the VERAXIS AI Autonomous Intent Classifier.\n"
         "Analyze the user query and classify it into:\n"
         "- 'GENERAL_CHAT': Casual greetings, personal questions, simple facts, quick code fixes, conversational banter.\n"
         "- 'DEEP_RESEARCH': Complex scientific topics, commercial feasibility, empirical benchmarks, market analysis, paper reviews, future forecasts.\n\n"
@@ -51,7 +55,7 @@ def classify_query_intent(query: str, chat_history: List[Dict[str, str]] = None)
             data = json.loads(json_match.group(0))
             if "intent" in data and data["intent"] in ["GENERAL_CHAT", "DEEP_RESEARCH"]:
                 return data
-    except Exception as e:
+    except Exception:
         pass
 
     # Heuristic fallback
@@ -78,7 +82,7 @@ def generate_fast_chat_response(messages: List[Dict[str, str]]) -> str:
     system_instruction = {
         "role": "system",
         "content": (
-            "You are MULTIINTEL AI, a witty, brilliant, and polite technical intelligence assistant. "
+            "You are VERAXIS AI, a witty, brilliant, and polite technical intelligence assistant. "
             "You speak in clear, natural Hinglish or English. "
             "Answer directly without fluff. If the user asks for deep scientific papers or market analysis, "
             "let them know you can activate your 3-Tier Multi-Agent Research Crew anytime."
