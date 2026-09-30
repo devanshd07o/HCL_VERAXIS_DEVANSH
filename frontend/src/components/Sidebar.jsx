@@ -274,9 +274,9 @@ export default function Sidebar({
         <HoverPill text="New Research Chat" position="right">
           <button
             onClick={onNewSession}
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-tr from-[var(--accent-blue)] to-indigo-600 text-white shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer mb-2"
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--accent-primary)] text-white shadow-xs hover:brightness-110 active:scale-95 transition-all cursor-pointer mb-2"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 stroke-[2.5]" />
           </button>
         </HoverPill>
 
