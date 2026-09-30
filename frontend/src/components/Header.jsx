@@ -10,6 +10,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen
 } from "lucide-react";
+import HoverPill from "./HoverPill";
 
 export default function Header({
   sidebarOpen,
@@ -121,18 +122,3 @@ export default function Header({
   );
 }
 
-// Standard Premium Hover Pill (Tooltip Component)
-function HoverPill({ children, text }) {
-  if (!text) return children;
-
-  return (
-    <div className="relative group flex items-center justify-center">
-      {children}
-      <div className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 ease-out px-2.5 py-1 rounded-lg bg-[var(--island-bg)] text-[var(--text-main)] text-[11px] font-semibold border border-[var(--glass-border)] shadow-xl whitespace-nowrap backdrop-blur-2xl">
-        {text}
-        {/* Soft triangular arrow pointer */}
-        <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-[var(--island-bg)] border-t border-l border-[var(--glass-border)]" />
-      </div>
-    </div>
-  );
-}

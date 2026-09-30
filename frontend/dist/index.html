@@ -11,15 +11,20 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="VERAXIS AI" />
     <title>VERAXIS AI — Autonomous Scientific Intelligence</title>
-    <script type="module" crossorigin src="/assets/index-BIXnFndf.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-k0gC7mDV.css">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <script type="module" crossorigin src="/assets/index-CdLQcXKJ.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-LxP2sOgu.css">
   </head>
   <body>
     <div id="root"></div>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => {
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            reg.update();
+          }).catch(err => {
             console.debug('ServiceWorker registration error:', err);
           });
         });

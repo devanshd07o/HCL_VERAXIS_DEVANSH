@@ -1,5 +1,5 @@
-const CACHE_NAME = "veraxis-pwa-v1";
-const STATIC_ASSETS = ["/", "/manifest.json", "/assets/veraxis_logo.png"];
+const CACHE_NAME = "veraxis-pwa-v2";
+const STATIC_ASSETS = ["/manifest.json", "/assets/veraxis_logo.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -22,11 +22,27 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Network first, fallback to cache
-  if (event.request.method !== "GET" || event.request.url.includes("/api/")) {
+  // Always let HTML navigation, API endpoints, and dynamic requests pass straight to network
+  if (
+    event.request.method !== "GET" ||
+    event.request.mode === "navigate" ||
+    event.request.url.includes("/api/") ||
+    event.request.url.endsWith("/") ||
+    event.request.url.includes(".html")
+  ) {
     return;
   }
+
+  // Network-first for static assets with cache fallback
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

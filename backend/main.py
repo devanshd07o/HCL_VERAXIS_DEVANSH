@@ -95,10 +95,24 @@ async def root():
     """Serves the primary Web frontend (React production build or fallback)."""
     index_path = os.path.join(FRONTEND_DIST, "index.html")
     if os.path.exists(index_path):
-        return FileResponse(index_path)
+        return FileResponse(
+            index_path,
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
     legacy_index = os.path.join(PROJECT_ROOT, "web", "index.html")
     if os.path.exists(legacy_index):
-        return FileResponse(legacy_index)
+        return FileResponse(
+            legacy_index,
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
     return JSONResponse({
         "status": "online",
         "service": "VERAXIS AI Backend",

@@ -63,7 +63,12 @@ export default function App() {
   }, [chatWidth]);
 
   // Layout Panels state (Left & Right)
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.innerWidth >= 1024;
+    }
+    return false;
+  });
   const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const [activeResearchData, setActiveResearchData] = useState(null);
   const [chatTitle, setChatTitle] = useState("New Chat");
@@ -349,6 +354,7 @@ export default function App() {
         {/* Left Collapsible Navigation Sidebar (Image 2 style floating island) */}
         <Sidebar
           sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
           sessions={sessions}
           currentSessionId={currentSessionId}
           onNewSession={handleNewSession}
@@ -360,7 +366,7 @@ export default function App() {
         {/* Center Main Stage (Adapts margins based on left/right panel states) */}
         <main
           className={`flex-1 h-full flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${
-            sidebarOpen ? "sm:pl-[300px] md:pl-[340px]" : "pl-0"
+            sidebarOpen ? "sm:pl-[300px] md:pl-[340px]" : "sm:pl-[80px] pl-0"
           } ${rightPanelOpen ? "xl:pr-[430px]" : "pr-0"}`}
         >
           {isInitialMode ? (
