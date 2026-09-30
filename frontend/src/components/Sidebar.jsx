@@ -59,10 +59,10 @@ export default function Sidebar({
             setSidebarOpen?.(false);
           }
         }}
-        className={`fixed top-16 bottom-3 left-3 z-30 flex flex-col p-3.5 bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] rounded-2xl sm:rounded-3xl shadow-[var(--island-shadow)] transition-all duration-300 ease-out sidebar-dbl-area ${
+        className={`fixed top-16 bottom-3 left-3 z-30 flex flex-col w-72 sm:w-80 p-3.5 bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] rounded-2xl sm:rounded-3xl shadow-[var(--island-shadow)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] sidebar-dbl-area ${
           sidebarOpen
-            ? "w-72 sm:w-80 translate-x-0 opacity-100 pointer-events-auto"
-            : "w-0 -translate-x-full opacity-0 pointer-events-none p-0 overflow-hidden border-none"
+            ? "translate-x-0 opacity-100 pointer-events-auto"
+            : "-translate-x-[calc(100%+24px)] opacity-0 pointer-events-none"
         }`}
       >
         {/* Brand Header with Close/Collapse Icon */}
@@ -251,62 +251,63 @@ export default function Sidebar({
       {/* ============================================================ */}
       {/* 2. COLLAPSED MINI LEFT RAIL (Visible on desktop when collapsed) */}
       {/* ============================================================ */}
-      {!sidebarOpen && (
-        <aside
-          onDoubleClick={() => setSidebarOpen?.(true)}
-          className="fixed top-16 bottom-3 left-3 z-30 hidden sm:flex flex-col items-center py-3 px-2 w-14 sm:w-16 bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] rounded-2xl sm:rounded-3xl shadow-[var(--island-shadow)] transition-all duration-300 animate-buttery-fade-in"
-        >
-          {/* Top: Expand Toggle Icon */}
-          <HoverPill text="Expand Sidebar (Ctrl+B)" position="right">
+      <aside
+        onDoubleClick={() => setSidebarOpen?.(true)}
+        className={`fixed top-16 bottom-3 left-3 z-20 hidden sm:flex flex-col items-center py-3 px-2 w-14 sm:w-16 bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] rounded-2xl sm:rounded-3xl shadow-[var(--island-shadow)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+          !sidebarOpen
+            ? "translate-x-0 opacity-100 pointer-events-auto"
+            : "-translate-x-[calc(100%+24px)] opacity-0 pointer-events-none"
+        }`}
+      >
+        {/* Top: Expand Toggle Icon */}
+        <HoverPill text="Expand Sidebar (Ctrl+B)" position="right">
+          <button
+            onClick={() => setSidebarOpen?.(true)}
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer mb-2"
+          >
+            <PanelLeftOpen className="w-4 h-4 opacity-80" />
+          </button>
+        </HoverPill>
+
+        {/* New Chat Icon Button */}
+        <HoverPill text="New Research Chat" position="right">
+          <button
+            onClick={onNewSession}
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-tr from-[var(--accent-blue)] to-indigo-600 text-white shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer mb-2"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        </HoverPill>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Bottom: Theme Toggle + Settings Icon */}
+        <div className="flex flex-col items-center gap-2 mt-auto">
+          <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"} position="right">
             <button
-              onClick={() => setSidebarOpen?.(true)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer mb-2"
+              onClick={onToggleTheme}
+              className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
+              title="Toggle Theme"
             >
-              <PanelLeftOpen className="w-4 h-4 opacity-80" />
+              {theme === "dark" ? (
+                <Sun className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Moon className="w-4 h-4 text-slate-700" />
+              )}
             </button>
           </HoverPill>
 
-          {/* New Chat Icon Button */}
-          <HoverPill text="New Research Chat" position="right">
+          <HoverPill text="Preferences & Settings" position="right">
             <button
-              onClick={onNewSession}
-              className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-tr from-[var(--accent-blue)] to-indigo-600 text-white shadow-sm hover:brightness-110 active:scale-95 transition-all cursor-pointer mb-2"
+              onClick={onOpenSettings}
+              className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Settings className="w-4 h-4 opacity-80" />
             </button>
           </HoverPill>
-
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Bottom: Theme Toggle + Settings Icon */}
-          <div className="flex flex-col items-center gap-2 mt-auto">
-
-            <HoverPill text={theme === "dark" ? "Light Mode" : "Dark Mode"} position="right">
-              <button
-                onClick={onToggleTheme}
-                className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-                title="Toggle Theme"
-              >
-                {theme === "dark" ? (
-                  <Sun className="w-4 h-4 text-amber-400" />
-                ) : (
-                  <Moon className="w-4 h-4 text-slate-700" />
-                )}
-              </button>
-            </HoverPill>
-
-            <HoverPill text="Preferences & Settings" position="right">
-              <button
-                onClick={onOpenSettings}
-                className="w-10 h-10 rounded-xl flex items-center justify-center bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] text-[var(--text-main)] hover:bg-[var(--glass-border)] active:scale-95 transition-all cursor-pointer"
-              >
-                <Settings className="w-4 h-4 opacity-80" />
-              </button>
-            </HoverPill>
-          </div>
-        </aside>
-      )}
+        </div>
+      </aside>
     </>
   );
 }

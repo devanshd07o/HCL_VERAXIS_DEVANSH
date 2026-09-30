@@ -372,7 +372,7 @@ export default function App() {
               }
             }
           }}
-          className={`flex-1 h-full flex flex-col min-w-0 overflow-hidden transition-all duration-300 ${
+          className={`flex-1 h-full flex flex-col min-w-0 overflow-hidden transition-[padding] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] ${
             sidebarOpen ? "sm:pl-[300px] md:pl-[340px]" : "sm:pl-[80px] pl-0"
           } ${rightPanelOpen ? "xl:pr-[430px]" : "pr-0"}`}
         >

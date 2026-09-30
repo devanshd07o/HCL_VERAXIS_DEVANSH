@@ -25,66 +25,50 @@ export default function ChatStream({
   onInspectResearch,
 }) {
   return (
-    <div className={`w-full ${widthClass} mx-auto px-2 sm:px-4 py-4 flex flex-col gap-7`}>
+    <div className={`w-full ${widthClass} mx-auto px-2 sm:px-4 py-4 flex flex-col gap-5 sm:gap-6`}>
       {messages.map((msg, idx) => (
-        <div key={idx} className="w-full flex flex-col gap-2">
+        <div key={idx} className="w-full flex flex-col gap-1.5 animate-buttery-fade-in">
           {msg.role === "user" ? (
-            /* USER QUERY ROW (Image 2 Inspired: Avatar + Text + Clean Bubble) */
-            <div className="flex items-start justify-end gap-3 max-w-[88%] ml-auto">
-              <div className="flex flex-col items-end gap-1">
-                <div className="px-5 py-3 rounded-2xl rounded-tr-xs bg-gradient-to-r from-[var(--accent-blue)] via-indigo-600 to-[var(--accent-cyan)] text-white text-[14px] sm:text-[15px] shadow-sm leading-relaxed font-normal">
-                  {msg.content}
-                </div>
-                <span className="text-[10.5px] text-[var(--text-muted)] px-1 font-mono">You</span>
-              </div>
-
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-sky-400 to-indigo-600 flex items-center justify-center text-white text-[11px] font-bold shrink-0 shadow-xs mt-0.5">
-                DN
+            /* USER QUERY ROW: Subtle, less contrasty, compact borderless pill */
+            <div className="flex items-start justify-end max-w-[85%] sm:max-w-[75%] ml-auto">
+              <div className="px-4 py-2 sm:px-4.5 sm:py-2.5 rounded-2xl rounded-tr-xs bg-[var(--island-bg)] border border-white/[0.08] text-[var(--text-main)] text-[14px] sm:text-[14.5px] shadow-xs leading-relaxed font-normal">
+                {msg.content}
               </div>
             </div>
           ) : (
-            /* BOT RESPONSE ROW (Image 2 + Perplexity + Claude Fusion) */
-            <div className="w-full p-4 sm:p-6 rounded-2xl sm:rounded-3xl bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] shadow-[var(--island-shadow)] text-[var(--text-main)] space-y-4.5">
-              {/* Bot Identity Header (Image 2 style: CHAT A.I+) */}
-              <div className="flex items-center justify-between border-b border-[var(--glass-border)] pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-[var(--highlight-bg)] text-[var(--accent-cyan)] flex items-center justify-center border border-[var(--glass-border)]">
-                    <Sparkles className="w-3.5 h-3.5 animate-pulse-subtle" />
+            /* BOT RESPONSE ROW: Borderless, tight padding, premium standard */
+            <div className="w-full px-1 sm:px-2 py-1 text-[var(--text-main)] space-y-2">
+              {/* Subtle Bot Brand Header */}
+              <div className="flex items-center justify-between text-[11.5px] text-[var(--text-muted)] select-none">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-4 h-4 rounded-full bg-[var(--highlight-bg)] text-[var(--accent-cyan)] flex items-center justify-center">
+                    <Sparkles className="w-2.5 h-2.5" />
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-extrabold text-[13.5px] sm:text-[14px] tracking-tight text-[var(--text-main)]">
-                      VERAXIS A.I
-                    </span>
-                    <span className="text-[11px] font-bold text-[var(--accent-cyan)]">+</span>
-                  </div>
+                  <span className="font-semibold text-[12px] tracking-tight text-[var(--text-main)]/85">
+                    VERAXIS
+                  </span>
                 </div>
 
-                {/* Right Research Badge */}
-                {msg.type === "research" ? (
+                {/* Right Research Badge (only when deep research) */}
+                {msg.type === "research" && (
                   <button
                     onClick={() => onInspectResearch && onInspectResearch(msg)}
-                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11.5px] font-semibold bg-[var(--highlight-bg)] text-[var(--accent-cyan)] border border-[var(--accent-cyan)]/30 hover:bg-[var(--accent-cyan)]/20 active:scale-95 transition-all cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[var(--highlight-bg)] text-[var(--accent-cyan)] hover:bg-[var(--accent-cyan)]/20 active:scale-95 transition-all cursor-pointer"
                     title="Open live telemetry in Right Inspector"
                   >
-                    <Cpu className="w-3.5 h-3.5" />
-                    <span>3-Agent Swarm</span>
-                    <ChevronRight className="w-3 h-3 opacity-70" />
+                    <Cpu className="w-3 h-3" />
+                    <span>Multi-Agent Swarm</span>
+                    <ChevronRight className="w-3 h-3 opacity-60" />
                   </button>
-                ) : (
-                  <span className="text-[11px] font-mono text-[var(--text-muted)] opacity-80">
-                    Fast Inference &lt;400ms
-                  </span>
                 )}
               </div>
 
               {/* PERPLEXITY STYLE SOURCES GRID (If Deep Research) */}
               {msg.type === "research" && msg.sources && msg.sources.length > 0 && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-                    <div className="flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5 text-[var(--accent-cyan)]" />
-                      <span>Indexed Empirical Sources ({msg.sources.length})</span>
-                    </div>
+                <div className="space-y-1.5 py-1">
+                  <div className="flex items-center gap-1.5 text-[10.5px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+                    <BookOpen className="w-3 h-3 text-[var(--accent-cyan)]" />
+                    <span>Sources ({msg.sources.length})</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -94,15 +78,15 @@ export default function ChatStream({
                         href={s.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group p-2.5 rounded-xl bg-[var(--glass-surface-subtle)] border border-[var(--glass-border)] hover:border-[var(--accent-cyan)]/40 hover:bg-[var(--glass-border)]/50 transition-all flex flex-col justify-between gap-1.5"
+                        className="group p-2 rounded-xl bg-[var(--island-bg)]/80 border border-white/[0.06] hover:border-[var(--accent-cyan)]/30 transition-all flex flex-col justify-between gap-1"
                       >
-                        <div className="flex items-center justify-between text-[10.5px] font-semibold text-[var(--accent-cyan)]">
-                          <span className="px-1.5 py-0.5 rounded-md bg-[var(--chip-bg)] border border-[var(--chip-border)]">
+                        <div className="flex items-center justify-between text-[10px] font-semibold text-[var(--accent-cyan)]">
+                          <span className="px-1 py-0.5 rounded-md bg-[var(--chip-bg)]">
                             [{sIdx + 1}] arXiv
                           </span>
-                          <ExternalLink className="w-3 h-3 text-[var(--text-muted)] group-hover:text-[var(--accent-cyan)] transition-colors" />
+                          <ExternalLink className="w-2.5 h-2.5 text-[var(--text-muted)] group-hover:text-[var(--accent-cyan)]" />
                         </div>
-                        <div className="text-[12px] font-medium text-[var(--text-main)] line-clamp-2 leading-snug">
+                        <div className="text-[11.5px] font-medium text-[var(--text-main)] line-clamp-1 leading-snug">
                           {s.title}
                         </div>
                       </a>
@@ -111,38 +95,38 @@ export default function ChatStream({
                 </div>
               )}
 
-              {/* CLAUDE EDITORIAL BODY (Pure Typography with Buttery Cascading Stream) */}
-              <div className="text-[14.5px] sm:text-[15px] leading-relaxed text-[var(--text-main)]">
+              {/* EDITORIAL BODY: Pure Typography */}
+              <div className="text-[14px] sm:text-[14.5px] leading-relaxed text-[var(--text-main)]">
                 <FormattedContent text={msg.content} />
               </div>
 
-              {/* ACTION TOOLBAR (Image 2 Inspired: Thumbs, Copy, PDF Download) */}
-              <div className="pt-3 border-t border-[var(--glass-border)] flex flex-wrap items-center justify-between gap-2.5">
-                <div className="flex items-center gap-1 text-[var(--text-muted)]">
+              {/* ACTION TOOLBAR: Subtle, compact, no heavy border line */}
+              <div className="pt-1 flex items-center justify-between text-[var(--text-muted)] opacity-70 hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-0.5">
                   <ActionButton icon={ThumbsUp} title="Good response" />
                   <ActionButton icon={ThumbsDown} title="Poor response" />
                   <CopyButton text={msg.content} />
                   {msg.type === "research" && (
                     <button
                       onClick={() => onInspectResearch && onInspectResearch(msg)}
-                      className="ml-1 px-2.5 py-1 rounded-lg text-[11.5px] font-medium hover:bg-[var(--glass-surface-subtle)] hover:text-[var(--text-main)] transition-colors flex items-center gap-1.5"
+                      className="ml-1 px-2 py-0.5 rounded-md text-[11px] font-medium hover:bg-[var(--glass-surface-subtle)] hover:text-[var(--text-main)] transition-colors flex items-center gap-1"
                     >
                       <Layers className="w-3 h-3 text-[var(--accent-cyan)]" />
-                      <span>Inspect Telemetry</span>
+                      <span>Telemetry</span>
                     </button>
                   )}
                 </div>
 
-                {/* 1-Click ReportLab 4.x PDF Download Pill */}
+                {/* 1-Click PDF Download */}
                 {msg.pdf_filename && (
                   <a
                     href={`/api/download-pdf/${encodeURIComponent(msg.pdf_filename)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-[var(--accent-blue)] to-[var(--accent-cyan)] text-white text-[12px] font-semibold hover:opacity-90 active:scale-95 shadow-sm transition-all cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[var(--highlight-bg)] border border-[var(--accent-cyan)]/30 text-[var(--accent-cyan)] text-[11px] font-medium hover:bg-[var(--accent-cyan)]/20 active:scale-95 transition-all cursor-pointer"
                   >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>Download PDF Dossier</span>
+                    <Download className="w-3 h-3" />
+                    <span>PDF Dossier</span>
                   </a>
                 )}
               </div>
@@ -151,20 +135,13 @@ export default function ChatStream({
         </div>
       ))}
 
-      {/* Shimmer Indicator during Processing */}
+      {/* Sleek Borderless Thinking Strip (No Pill Box) */}
       {isLoading && (
-        <div className="w-full flex items-start">
-          <div className="p-4 sm:p-5 rounded-2xl bg-[var(--island-bg)] backdrop-blur-2xl border border-[var(--island-border)] shadow-sm flex items-center gap-3">
-            <div className="w-6 h-6 rounded-lg bg-[var(--highlight-bg)] text-[var(--accent-cyan)] flex items-center justify-center animate-spin">
-              <RotateCw className="w-3.5 h-3.5" />
-            </div>
-            <span
-              className="t-shimmer text-[13.5px] sm:text-[14px] font-medium"
-              data-text="Mobilizing 3-Tier Multi-Agent Swarm (Analyst ➔ Auditor ➔ Director)..."
-            >
-              Mobilizing 3-Tier Multi-Agent Swarm (Analyst ➔ Auditor ➔ Director)...
-            </span>
-          </div>
+        <div className="w-full flex items-center gap-2 py-2 px-1 text-[var(--text-muted)] select-none animate-buttery-fade-in">
+          <div className="w-3.5 h-3.5 rounded-full border-2 border-[var(--accent-cyan)] border-t-transparent animate-spin shrink-0" />
+          <span className="text-[13px] font-medium text-[var(--text-muted)] animate-pulse tracking-wide">
+            Thinking...
+          </span>
         </div>
       )}
     </div>

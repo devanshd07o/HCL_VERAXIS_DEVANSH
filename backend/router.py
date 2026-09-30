@@ -24,10 +24,27 @@ def get_groq_client() -> OpenAI:
 
 def classify_query_intent(query: str, chat_history: List[Dict[str, str]] = None) -> Dict[str, Any]:
     """
-    Classifies user intent using Groq fast inference:
+    Classifies user intent using instant heuristics and Groq fast inference:
     - GENERAL_CHAT: Casual banter, quick definitions, greetings, programming assistance, simple facts.
     - DEEP_RESEARCH: Technical feasibility, comparative benchmarks, multi-paper scientific inquiries, commercial market viability.
     """
+    clean_q = query.strip().lower()
+    
+    # Fast-path for common greetings & conversational queries (0ms latency, zero API roundtrip)
+    common_chats = [
+        "hello", "hi", "hey", "hola", "namaste", "good morning", "good evening",
+        "good afternoon", "how are you", "how are you doing", "what's up", "whats up",
+        "who are you", "what can you do", "help", "thanks", "thank you", "bye",
+        "goodbye", "test", "ping", "ok", "okay", "sup", "yo"
+    ]
+    if clean_q in common_chats or any(clean_q.startswith(g + " ") for g in ["hello", "hi", "hey"]):
+        return {
+            "intent": "GENERAL_CHAT",
+            "extracted_topic": query,
+            "confidence": 1.0,
+            "reasoning": "Instant zero-latency casual greeting match"
+        }
+
     client = get_groq_client()
     system_prompt = (
         "You are the VERAXIS AI Autonomous Intent Classifier.\n"
@@ -46,10 +63,9 @@ def classify_query_intent(query: str, chat_history: List[Dict[str, str]] = None)
                 {"role": "user", "content": query}
             ],
             temperature=0.0,
-            max_tokens=120
+            max_tokens=100
         )
         content = response.choices[0].message.content.strip()
-        # Regex extraction to handle any potential backticks or text wrapper
         json_match = re.search(r'\{.*\}', content, re.DOTALL)
         if json_match:
             data = json.loads(json_match.group(0))
@@ -58,20 +74,21 @@ def classify_query_intent(query: str, chat_history: List[Dict[str, str]] = None)
     except Exception:
         pass
 
-    # Heuristic fallback
+    # Heuristic fallback for scientific & empirical queries
     research_indicators = [
-        "commercial", "viability", "benchmark", "market", "paper", "arxiv",
-        "quantum", "battery", "architecture", "patent", "cost", "feasibility",
-        "versus", "vs", "forecast", "solid-state", "pqc", "neuromorphic"
+        "commercial", "viability", "benchmark", "paper", "arxiv",
+        "quantum", "battery", "feasibility", "versus", "vs", "forecast",
+        "solid-state", "pqc", "neuromorphic", "empirical", "comparison",
+        "density", "electrolyte", "superconductor", "cryptography", "clinical trial",
+        "crispr", "perovskite", "fusion", "photovoltaic", "algorithm", "bandwidth"
     ]
-    query_lower = query.lower()
-    is_deep = any(term in query_lower for term in research_indicators) or len(query.split()) >= 8
+    is_deep = any(term in clean_q for term in research_indicators)
     
     return {
         "intent": "DEEP_RESEARCH" if is_deep else "GENERAL_CHAT",
         "extracted_topic": query,
         "confidence": 0.85,
-        "reasoning": "Keyword-density & structural intent detection"
+        "reasoning": "Scientific marker detection"
     }
 
 def generate_fast_chat_response(messages: List[Dict[str, str]]) -> str:
@@ -102,7 +119,7 @@ def generate_fast_chat_response(messages: List[Dict[str, str]]) -> str:
             model=key_manager.fast_model,
             messages=full_messages,
             temperature=0.3,
-            max_tokens=600
+            max_tokens=150
         )
         return response.choices[0].message.content.strip()
     except Exception as e:
