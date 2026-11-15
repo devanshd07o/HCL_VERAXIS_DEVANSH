@@ -1,9 +1,23 @@
-const CACHE_NAME = "veraxis-pwa-v2";
-const STATIC_ASSETS = ["/manifest.json", "/assets/veraxis_logo.png"];
+const CACHE_NAME = "veraxis-pwa-v3";
+const PRECACHE_ASSETS = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./favicon.ico",
+  "./assets/icons/icon-192x192.png",
+  "./assets/icons/icon-512x512.png",
+  "./assets/icons/icon-maskable-192x192.png",
+  "./assets/icons/icon-maskable-512x512.png"
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_ASSETS))
+      .catch((err) => {
+        console.warn("[SW] Precache skipped non-critical failure:", err);
+      })
   );
   self.skipWaiting();
 });
@@ -13,7 +27,9 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
         })
       )
     )
@@ -22,27 +38,41 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Always let HTML navigation, API endpoints, and dynamic requests pass straight to network
+  const url = new URL(event.request.url);
+
+  // Bypass API requests, non-GET requests, and local dev websockets/HMR
   if (
     event.request.method !== "GET" ||
-    event.request.mode === "navigate" ||
-    event.request.url.includes("/api/") ||
-    event.request.url.endsWith("/") ||
-    event.request.url.includes(".html")
+    url.pathname.includes("/api/") ||
+    url.pathname.includes("/sessions") ||
+    url.protocol === "ws:" ||
+    url.protocol === "wss:"
   ) {
     return;
   }
 
-  // Network-first for static assets with cache fallback
+  // Network-first strategy with cache fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        if (response && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        if (response && response.status === 200 && response.type === "basic") {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, clone).catch(() => {});
+          });
         }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        if (event.request.mode === "navigate") {
+          return (await caches.match("./index.html")) || (await caches.match("./"));
+        }
+        return new Response("Network unavailable", {
+          status: 503,
+          headers: { "Content-Type": "text/plain" }
+        });
+      })
   );
 });
