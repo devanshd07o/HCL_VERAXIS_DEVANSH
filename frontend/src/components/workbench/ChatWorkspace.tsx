@@ -17,6 +17,7 @@ import {
   type SetStateAction,
 } from "react";
 import DOMPurify from "dompurify";
+import { getApiUrl } from "@/lib/api";
 import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import {
   ArrowDown,
@@ -1538,7 +1539,7 @@ export default function ChatWorkspace({
       setEnhancing(true);
       setNotice(null);
       try {
-        const res = await fetch("/api/enhance", {
+        const res = await fetch(getApiUrl("/api/enhance"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ query: text }),

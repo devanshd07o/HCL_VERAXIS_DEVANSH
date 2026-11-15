@@ -15,11 +15,13 @@ import {
   Monitor,
   Moon,
   Palette,
+  Server,
   Smartphone,
   Sun,
   Trash2,
   X,
 } from "lucide-react";
+import { getApiUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   DARK_PRESETS,
@@ -181,8 +183,31 @@ export default function VaultSettings({
   const [savedBanner, setSavedBanner] = useState<string | null>(null);
   const [errorsState, setErrorsState] = useState<Record<string, string>>({});
   const [serverServices, setServerServices] = useState<Record<string, { configured: boolean; masked: string }>>({});
+  const [backendUrlInput, setBackendUrlInput] = useState(() => {
+    return typeof window !== "undefined" ? localStorage.getItem("veraxis_api_url") || "" : "";
+  });
+  const [serverOnline, setServerOnline] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
+
+  const handleSaveBackendUrl = () => {
+    const clean = backendUrlInput.trim().replace(/\/+$/, "");
+    if (!clean) {
+      localStorage.removeItem("veraxis_api_url");
+      setSavedBanner("Default local/relative backend");
+    } else {
+      localStorage.setItem("veraxis_api_url", clean);
+      setSavedBanner("Cloud backend endpoint");
+    }
+    setTimeout(() => setSavedBanner(null), 3000);
+
+    // Test ping
+    fetch(getApiUrl("/api/status"))
+      .then((r) => {
+        setServerOnline(r.ok);
+      })
+      .catch(() => setServerOnline(false));
+  };
 
   /* ---- Detect standalone PWA / install capability ---- */
   useEffect(() => {
@@ -274,7 +299,7 @@ export default function VaultSettings({
       setKeysState(initialKeys);
 
       // Fetch server keys status
-      fetch("/api/keys/services")
+      fetch(getApiUrl("/api/keys/services"))
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (data) setServerServices(data);
@@ -344,7 +369,7 @@ export default function VaultSettings({
       setTimeout(() => setSavedBanner(null), 3000);
 
       // Sync with backend
-      await fetch("/api/keys/service", {
+      await fetch(getApiUrl("/api/keys/service"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ service: cfg.id, key: val }),
@@ -367,7 +392,7 @@ export default function VaultSettings({
         return copy;
       });
       // Sync removal with backend
-      await fetch("/api/keys/service", {
+      await fetch(getApiUrl("/api/keys/service"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ service: cfg.id, key: "" }),
@@ -584,9 +609,47 @@ export default function VaultSettings({
               {savedBanner && (
                 <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-xs font-medium text-emerald-400 flex items-center gap-2 animate-enter">
                   <Check className="size-4 shrink-0" />
-                  <span>{savedBanner} key saved to browser storage.</span>
+                  <span>{savedBanner} saved successfully.</span>
                 </div>
               )}
+
+              {/* Cloud Backend Endpoint (Zero-BYOK Mode) */}
+              <div className="rounded-xl border border-primary/30 bg-primary/5 p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <Server className="size-4 text-primary" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-foreground">
+                      Cloud Backend Endpoint (Zero-BYOK Mode)
+                    </span>
+                  </div>
+                  {serverOnline ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      <Check className="size-3" /> Online
+                    </span>
+                  ) : null}
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Connect a cloud-hosted FastAPI server (Render, Railway, Cloudflare Tunnel) to enable instant research for all visitors without requiring personal API keys.
+                </p>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={backendUrlInput}
+                    onChange={(e) => setBackendUrlInput(e.target.value)}
+                    placeholder="https://your-backend.onrender.com (or empty for localhost)"
+                    className="h-8.5 flex-1 rounded-lg border border-border bg-secondary/30 px-3 font-mono text-base sm:text-xs text-foreground placeholder:text-muted-foreground/50 focus:border-primary focus:outline-none transition-colors"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSaveBackendUrl}
+                    className="uv-btn-galaxy shrink-0 cursor-pointer"
+                  >
+                    <span className="uv-btn-galaxy-inner px-3 py-1.5 text-xs font-medium">
+                      Save URL
+                    </span>
+                  </button>
+                </div>
+              </div>
 
               {/* Service Key Cards */}
               <div className="space-y-3">

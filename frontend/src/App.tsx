@@ -21,6 +21,7 @@ import DossiersArchive, {
 import VaultSettings from "@/components/workbench/VaultSettings";
 import type { ContextSegment } from "@/components/registry/ai-context-meter";
 import { applyThemePreset, getStoredThemePreset } from "@/lib/theme-presets";
+import { getApiUrl } from "@/lib/api";
 
 /* ==========================================================================
    Constants & types
@@ -493,7 +494,7 @@ export default function App() {
   const scheduleRemoteSync = useCallback(() => {
     window.clearTimeout(syncTimerRef.current);
     syncTimerRef.current = window.setTimeout(() => {
-      fetch("/sessions", {
+      fetch(getApiUrl("/sessions"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(sessionsRef.current),
@@ -534,7 +535,7 @@ export default function App() {
   const requestTitle = useCallback(
     async (sessionId: string, list: ChatMessageRecord[]) => {
       try {
-        const res = await fetch("/api/title", {
+        const res = await fetch(getApiUrl("/api/title"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ messages: list }),
@@ -562,7 +563,7 @@ export default function App() {
 
     const poll = async () => {
       try {
-        const res = await fetch("/api/status", { signal: ctrl.signal });
+        const res = await fetch(getApiUrl("/api/status"), { signal: ctrl.signal });
         if (!res.ok) throw new Error(`status ${res.status}`);
         const data = await res.json();
         if (cancelled || !data?.telemetry) return;
@@ -595,7 +596,7 @@ export default function App() {
     const ctrl = new AbortController();
     (async () => {
       try {
-        const res = await fetch("/sessions", { signal: ctrl.signal });
+        const res = await fetch(getApiUrl("/sessions"), { signal: ctrl.signal });
         if (!res.ok) return;
         const data: unknown = await res.json();
         if (
@@ -773,7 +774,7 @@ export default function App() {
 
         let latestRollingSummary: string | undefined = existing?.rolling_summary;
 
-        const res = await fetch("/api/chat/stream", {
+        const res = await fetch(getApiUrl("/api/chat/stream"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           signal: controller.signal,
@@ -925,7 +926,7 @@ export default function App() {
     async (filename: string) => {
       try {
         const res = await fetch(
-          `/api/download-pdf/${encodeURIComponent(filename)}`
+          getApiUrl(`/api/download-pdf/${encodeURIComponent(filename)}`)
         );
         if (!res.ok) throw new Error(`PDF download failed (${res.status})`);
         triggerDownload(await res.blob(), filename);
