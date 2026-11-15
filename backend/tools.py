@@ -52,10 +52,43 @@ def arxiv_academic_search(query: str) -> str:
             )
             
         if not results:
+            try:
+                from backend.research_engine import search_arxiv_papers
+                fallback_papers = search_arxiv_papers(clean_q, max_results=4)
+                for p in fallback_papers:
+                    results.append(
+                        f"### [Paper] {p['title']}\n"
+                        f"- **Authors**: {p['authors']}\n"
+                        f"- **Published**: {p['year']}\n"
+                        f"- **Direct Link**: {p['url']}\n"
+                        f"- **PDF Link**: {p.get('pdf_url', '')}\n"
+                        f"- **Core Abstract**: {p.get('abstract', '')[:350]}...\n"
+                    )
+            except Exception:
+                pass
+
+        if not results:
             return f"No ArXiv academic papers found for query: '{query}'. Try broader scientific keywords."
             
         return "\n".join(results)
     except Exception as e:
+        try:
+            from backend.research_engine import search_arxiv_papers
+            fallback_papers = search_arxiv_papers(re.sub(r'[^\w\s-]', '', query).strip(), max_results=4)
+            if fallback_papers:
+                res = []
+                for p in fallback_papers:
+                    res.append(
+                        f"### [Paper] {p['title']}\n"
+                        f"- **Authors**: {p['authors']}\n"
+                        f"- **Published**: {p['year']}\n"
+                        f"- **Direct Link**: {p['url']}\n"
+                        f"- **PDF Link**: {p.get('pdf_url', '')}\n"
+                        f"- **Core Abstract**: {p.get('abstract', '')[:350]}...\n"
+                    )
+                return "\n".join(res)
+        except Exception:
+            pass
         return f"ArXiv search encountered an error: {str(e)}. Fallback to literature database."
 
 
@@ -69,7 +102,23 @@ def duckduckgo_web_search(query: str) -> str:
     clean_q = query.strip()
     results_output = []
 
-    # 1. Attempt DuckDuckGo search
+    # 1. Attempt Tavily AI Intelligence first via rotated key pool
+    try:
+        from backend.research_engine import fetch_commercial_web_news
+        tav_items = fetch_commercial_web_news(clean_q, max_results=3)
+        for item in tav_items:
+            results_output.append(
+                f"### [Web Intelligence] {item.get('title')}\n"
+                f"- **Source**: {item.get('source', 'Web Publication')}\n"
+                f"- **URL**: {item.get('url')}\n"
+                f"- **Snippet**: {item.get('snippet', '')[:280]}...\n"
+            )
+        if results_output:
+            return "\n".join(results_output)
+    except Exception:
+        pass
+
+    # 2. Attempt DuckDuckGo search
     try:
         from duckduckgo_search import DDGS
         with DDGS(timeout=8) as ddgs:

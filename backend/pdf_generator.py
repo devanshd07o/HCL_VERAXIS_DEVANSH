@@ -1,6 +1,6 @@
 """
-MULTIINTEL AI — Supreme Publication Dossier Engine (ReportLab 4.x)
-Generates McKinsey/Gartner style multi-colour PDF intelligence dossiers
+VERAXIS AI — Supreme Publication Dossier Engine (ReportLab 4.x)
+Generates institutional Obsidian & Burnished Gold PDF intelligence dossiers
 with two-pass page numbering, tri-colour top rules, KPI cards, and zebra tables.
 """
 
@@ -18,14 +18,14 @@ from reportlab.platypus import (
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT, TA_JUSTIFY
 
-# Clean Palette Definitions
-COLOR_PRIMARY = colors.HexColor("#3730A3")      # Indigo Dark
-COLOR_SECONDARY = colors.HexColor("#0D9488")    # Deep Teal
-COLOR_ACCENT = colors.HexColor("#7C3AED")       # Royal Violet
-COLOR_TEXT_MAIN = colors.HexColor("#0F172A")    # Slate 900
-COLOR_TEXT_MUTED = colors.HexColor("#475569")   # Slate 600
-COLOR_BG_LIGHT = colors.HexColor("#F8FAFC")     # Slate 50
-COLOR_BORDER = colors.HexColor("#E2E8F0")       # Slate 200
+# Clean Palette Definitions (Obsidian & Burnished Gold System)
+COLOR_PRIMARY = colors.HexColor("#090B10")      # Obsidian Ink / Anchor
+COLOR_SECONDARY = colors.HexColor("#161B26")    # Graphite Slate
+COLOR_ACCENT = colors.HexColor("#B47B0E")       # Burnished Champagne Gold
+COLOR_TEXT_MAIN = colors.HexColor("#090B10")    # High-contrast Obsidian Text
+COLOR_TEXT_MUTED = colors.HexColor("#475569")   # Muted Steel
+COLOR_BG_LIGHT = colors.HexColor("#F7F8FA")     # Clean Ivory Card Surface
+COLOR_BORDER = colors.HexColor("#CBD5E1")       # Architectural Border
 
 # Badges & Alerts
 COLOR_GREEN_BG = colors.HexColor("#DCFCE7")
@@ -84,8 +84,8 @@ class SupremeNumberedCanvas(canvas.Canvas):
         if self._pageNumber > 1:
             self.setFont("Helvetica-Bold", 8)
             self.setFillColor(COLOR_PRIMARY)
-            self.drawString(margin, page_h - 32, "MULTIINTEL AI // AUTONOMOUS RESEARCH DOSSIER")
-            
+            self.drawString(margin, page_h - 32, "VERAXIS AI // AUTONOMOUS RESEARCH DOSSIER")
+
             self.setFont("Helvetica", 8)
             self.setFillColor(COLOR_TEXT_MUTED)
             self.drawRightString(page_w - margin, page_h - 32, "EXECUTIVE BRIEFING")
@@ -101,12 +101,12 @@ class SupremeNumberedCanvas(canvas.Canvas):
 
         self.setFont("Helvetica-Bold", 8)
         self.setFillColor(COLOR_PRIMARY)
-        self.drawString(margin, 28, "MULTIINTEL INTELLIGENCE SYSTEM")
+        self.drawString(margin, 28, "VERAXIS INTELLIGENCE SYSTEM")
 
         self.setFont("Helvetica", 8)
         self.setFillColor(COLOR_TEXT_MUTED)
         date_str = datetime.now().strftime("%B %d, %Y")
-        self.drawString(margin + 175, 28, f"|  HCL Capstone Evaluation  |  Verified {date_str}")
+        self.drawString(margin + 155, 28, f"|  Verified Synthesis  |  {date_str}")
 
         page_str = f"Page {self._pageNumber} of {total_pages}"
         self.drawRightString(page_w - margin, 28, page_str)
@@ -249,18 +249,144 @@ class ReportLabDossierBuilder:
             textColor=COLOR_TEXT_MAIN
         ))
 
+        styles.add(ParagraphStyle(
+            name="EquationText",
+            fontName="Helvetica-Oblique",
+            fontSize=10,
+            leading=14,
+            textColor=COLOR_PRIMARY,
+            alignment=TA_CENTER
+        ))
+
         return styles
 
+    def _format_symbols_for_pdf(self, text: str) -> str:
+        """Converts standalone LaTeX symbol macros and chemical scripts outside math delimiters."""
+        if not text:
+            return ""
+        t = text
+        replacements = [
+            (r'\\le\b', '≤'),
+            (r'\\ge\b', '≥'),
+            (r'\\approx\b', '≈'),
+            (r'\\times\b', '×'),
+            (r'\\pm\b', '±'),
+            (r'\\neq\b', '≠'),
+            (r'\\cdot\b', '·'),
+            (r'\\downarrow\b', '↓'),
+            (r'\\uparrow\b', '↑'),
+            (r'\\rightarrow\b', '→'),
+            (r'\\leftarrow\b', '←'),
+            (r'\\sigma_{ion}\b', 'σ<sub>ion</sub>'),
+            (r'\\sigma\b', 'σ'),
+            (r'\\phi_{cer}\b', 'ϕ<sub>cer</sub>'),
+            (r'\\phi\b', 'ϕ'),
+            (r'\\Omega\b', 'Ω'),
+            (r'\\mu\b', 'μ'),
+            (r'\\alpha\b', 'α'),
+            (r'\\beta\b', 'β'),
+            (r'\\gamma\b', 'γ'),
+            (r'\\Delta\b', 'Δ'),
+            (r'\\pi\b', 'π'),
+            (r'\\text\{([^}]+)\}', r'\1'),
+            (r'\\([ ]+)', ' '),
+            (r'\\,', ' '),
+        ]
+        for pattern, rep in replacements:
+            t = re.sub(pattern, rep, t)
+
+        # Braced subscripts & superscripts only e.g. 10^{-4} or _{max}
+        t = re.sub(r'_\{([a-zA-Z0-9\.\-\+]+)\}', r'<sub>\1</sub>', t)
+        t = re.sub(r'\^\{([a-zA-Z0-9\.\-\+]+)\}', r'<sup>\1</sup>', t)
+        return t
+
+    def _format_math_for_pdf(self, text: str) -> str:
+        """Converts LaTeX formulas and expressions into ReportLab XML typography."""
+        if not text:
+            return ""
+        t = text.strip()
+        replacements = [
+            (r'\\frac\{([^}]+)\}\{([^}]+)\}', r'(\1 / \2)'),
+            (r'\\left\(', '('),
+            (r'\\right\)', ')'),
+            (r'\\left\[', '['),
+            (r'\\right\]', ']'),
+            (r'\\left\\\{', '{'),
+            (r'\\right\\\}', '}'),
+            (r'\\exp\b', 'exp'),
+            (r'\\ln\b', 'ln'),
+            (r'\\log\b', 'log'),
+            (r'\\sigma_{ion}\b', 'σ_ion'),
+            (r'\\sigma\b', 'σ'),
+            (r'\\Omega\b', 'Ω'),
+            (r'\\mu\b', 'μ'),
+            (r'\\alpha\b', 'α'),
+            (r'\\beta\b', 'β'),
+            (r'\\gamma\b', 'γ'),
+            (r'\\Delta\b', 'Δ'),
+            (r'\\phi_{cer}\b', 'ϕ_cer'),
+            (r'\\phi\b', 'ϕ'),
+            (r'\\pi\b', 'π'),
+            (r'\\infty\b', '∞'),
+            (r'\\partial\b', '∂'),
+            (r'\\sum\b', '∑'),
+            (r'\\prod\b', '∏'),
+            (r'\\int\b', '∫'),
+            (r'\\sqrt\{([^}]+)\}', r'√(\1)'),
+            (r'\\cdot\b', '·'),
+            (r'\\times\b', '×'),
+            (r'\\le\b', '≤'),
+            (r'\\ge\b', '≥'),
+            (r'\\approx\b', '≈'),
+            (r'\\pm\b', '±'),
+            (r'\\neq\b', '≠'),
+            (r'\\downarrow\b', '↓'),
+            (r'\\uparrow\b', '↑'),
+            (r'\\rightarrow\b', '→'),
+            (r'\\leftarrow\b', '←'),
+            (r'\\text\{([^}]+)\}', r'\1'),
+            (r'\\([ ]+)', ' '),
+            (r'\\,', ' '),
+        ]
+        for pattern, rep in replacements:
+            t = re.sub(pattern, rep, t)
+
+        # Subscripts & superscripts for ReportLab XML inside math mode
+        t = re.sub(r'_\{?([a-zA-Z0-9\.\-]+)\}?', r'<sub>\1</sub>', t)
+        t = re.sub(r'\^\{?([a-zA-Z0-9\.\-\+]+)\}?', r'<sup>\1</sup>', t)
+        t = t.replace('\\', '')
+        return t
+
     def _clean_text_for_pdf(self, text: str) -> str:
-        """Sanitize text and replace basic markdown bold/italics with ReportLab XML tags."""
-        text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        """Sanitize text and replace markdown and LaTeX math with ReportLab XML tags."""
+        if not text:
+            return ""
+
+        # Escape basic XML chars first
+        t = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+        # Inline math \( ... \) and $ ... $
+        def replace_inline_math(m):
+            math_content = m.group(1)
+            formatted = self._format_math_for_pdf(math_content)
+            return f"<i>{formatted}</i>"
+
+        t = re.sub(r'\\\((.*?)\\\)', replace_inline_math, t)
+        t = re.sub(r'(?<!\\)\$([^\$\n]+?)(?<!\\)\$', replace_inline_math, t)
+
+        # Standalone symbol macros (clean replacement without destroying words)
+        t = self._format_symbols_for_pdf(t)
+
+        # Chemical formula subscripts e.g. LiNi_{0.8} or LiCoO_2
+        t = re.sub(r'([A-Z][a-z]?)_\{?(\d+(?:\.\d+)?)\}?', r'\1<sub>\2</sub>', t)
+
         # Bold **text** -> <b>text</b>
-        text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+        t = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', t)
         # Italic *text* -> <i>text</i>
-        text = re.sub(r'\*(.*?)\*', r'<i>\1</i>', text)
+        t = re.sub(r'\*(.*?)\*', r'<i>\1</i>', t)
         # Inline code `code` -> <font face="Courier">code</font>
-        text = re.sub(r'`(.*?)`', r'<font face="Courier">\1</font>', text)
-        return text
+        t = re.sub(r'`(.*?)`', r'<font face="Courier">\1</font>', t)
+        return t
 
     def _extract_kpis(self) -> List[Tuple[str, str, str]]:
         """Extract 3 quantitative KPIs from markdown or provide grounded defaults."""
@@ -308,12 +434,12 @@ class ReportLabDossierBuilder:
         table_data = [card_cells]
         t = Table(table_data, colWidths=[col_w, col_w, col_w])
         t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, 0), colors.HexColor("#EEF2FF")),
-            ('BACKGROUND', (1, 0), (1, 0), colors.HexColor("#F0FDFA")),
-            ('BACKGROUND', (2, 0), (2, 0), colors.HexColor("#FAF5FF")),
-            ('BOX', (0, 0), (0, 0), 1, colors.HexColor("#C7D2FE")),
-            ('BOX', (1, 0), (1, 0), 1, colors.HexColor("#99F6E4")),
-            ('BOX', (2, 0), (2, 0), 1, colors.HexColor("#E9D5FF")),
+            ('BACKGROUND', (0, 0), (0, 0), colors.HexColor("#F7F8FA")),
+            ('BACKGROUND', (1, 0), (1, 0), colors.HexColor("#FBF8EC")),
+            ('BACKGROUND', (2, 0), (2, 0), colors.HexColor("#EEF1F6")),
+            ('BOX', (0, 0), (0, 0), 1, colors.HexColor("#CBD5E1")),
+            ('BOX', (1, 0), (1, 0), 1, colors.HexColor("#B47B0E")),
+            ('BOX', (2, 0), (2, 0), 1, colors.HexColor("#CBD5E1")),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
@@ -404,7 +530,7 @@ class ReportLabDossierBuilder:
         story.append(Paragraph(self._clean_text_for_pdf(f"RESEARCH DOSSIER: {self.topic.upper()}"), self.styles["DossierTitle"]))
         
         date_str = datetime.now().strftime("%B %d, %Y")
-        meta_sub = f"MULTIINTEL AI MULTI-AGENT SYNTHESIS  •  ACADEMIC & MARKET FORENSICS  •  {date_str}"
+        meta_sub = f"VERAXIS AI MULTI-AGENT SYNTHESIS  •  ACADEMIC & MARKET FORENSICS  •  {date_str}"
         story.append(Paragraph(meta_sub, self.styles["DossierSubtitle"]))
         story.append(HRFlowable(width="100%", thickness=1.5, color=COLOR_PRIMARY, spaceAfter=14))
 
@@ -442,6 +568,37 @@ class ReportLabDossierBuilder:
             # Empty lines
             if not stripped:
                 i += 1
+                continue
+
+            # Block Equations: \[ ... \] or $$ ... $$
+            if stripped.startswith("\\[") or stripped.startswith("$$"):
+                end_marker = "\\]" if stripped.startswith("\\[") else "$$"
+                start_marker = "\\[" if stripped.startswith("\\[") else "$$"
+                if stripped.endswith(end_marker) and len(stripped) > 4:
+                    eq_content = stripped[len(start_marker):-len(end_marker)].strip()
+                    i += 1
+                else:
+                    eq_content = stripped[len(start_marker):].strip()
+                    i += 1
+                    while i < len(lines) and not lines[i].strip().endswith(end_marker):
+                        eq_content += " " + lines[i].strip()
+                        i += 1
+                    if i < len(lines):
+                        eq_content += " " + lines[i].strip()[:-len(end_marker)].strip()
+                        i += 1
+
+                formatted_eq = self._format_math_for_pdf(eq_content)
+                eq_table = Table([[
+                    Paragraph(f"<b><i>{formatted_eq}</i></b>", self.styles["EquationText"])
+                ]], colWidths=[520])
+                eq_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F8FAFC")),
+                    ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor("#CBD5E1")),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ]))
+                story.append(KeepTogether([Spacer(1, 4), eq_table, Spacer(1, 6)]))
                 continue
 
             # Heading 1

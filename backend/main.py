@@ -8,11 +8,12 @@ Orchestrates:
 5. Serves Production React SaaS Web App & PWA Manifest/Service Worker
 """
 
+import asyncio
 import os
 import sys
 import random
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional, Callable
 
 # Configure UTF-8 on Windows stdout
 if sys.platform.startswith("win"):
@@ -24,29 +25,58 @@ if sys.platform.startswith("win"):
 
 import re
 import json
+import time
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
+from pydantic import BaseModel, Field
 
 # Internal Core Modules (Backend Package)
 try:
-    from backend.config import key_manager
-    from backend.router import classify_query_intent, generate_fast_chat_response
+    from backend.config import key_manager, set_service_key, get_service_keys
+    from backend.router import (
+        classify_query_intent,
+        generate_fast_chat_response,
+        prepare_fast_chat_messages,
+        rephrase_query_for_research,
+        stream_groq_tokens,
+        strip_think_tags,
+    )
     from backend.agents import create_lead_researcher, create_fact_checker, create_dossier_director
     from backend.tasks import create_discovery_task, create_audit_task, create_synthesis_task
     from backend.pdf_generator import create_pdf_dossier
     from backend.tools import arxiv_academic_search, duckduckgo_web_search
     from backend.helper import sanitize_filename, validate_system_environment
+    from backend.memory import (
+        disambiguate_and_classify_query,
+        update_rolling_memory,
+        get_stored_session_summary,
+        store_session_summary,
+        EPISTEMIC_HUMILITY_DIRECTIVE,
+    )
 except ImportError:
-    from config import key_manager
-    from router import classify_query_intent, generate_fast_chat_response
+    from config import key_manager, set_service_key, get_service_keys
+    from router import (
+        classify_query_intent,
+        generate_fast_chat_response,
+        prepare_fast_chat_messages,
+        rephrase_query_for_research,
+        stream_groq_tokens,
+        strip_think_tags,
+    )
     from agents import create_lead_researcher, create_fact_checker, create_dossier_director
     from tasks import create_discovery_task, create_audit_task, create_synthesis_task
     from pdf_generator import create_pdf_dossier
     from tools import arxiv_academic_search, duckduckgo_web_search
     from helper import sanitize_filename, validate_system_environment
+    from memory import (
+        disambiguate_and_classify_query,
+        update_rolling_memory,
+        get_stored_session_summary,
+        store_session_summary,
+        EPISTEMIC_HUMILITY_DIRECTIVE,
+    )
 
 from crewai import Crew, Process
 
@@ -84,9 +114,16 @@ if os.path.exists(WEB_DIR):
 class ChatRequest(BaseModel):
     query: str
     mode: str = "auto"
-    enhanced_query: str = None
-    search_keywords: str = None
+    enhanced_query: Optional[str] = None
+    search_keywords: Optional[str] = None
     force_research: bool = False
+    research_mode: bool = False
+    history: List[Dict[str, str]] = Field(default_factory=list)
+    attachments: List[Dict[str, str]] = Field(default_factory=list)
+    user_groq_key: Optional[str] = None
+    user_gemini_key: Optional[str] = None
+    session_id: Optional[str] = None
+    rolling_summary: Optional[str] = None
 
 class ClassifyRequest(BaseModel):
     query: str
@@ -186,6 +223,89 @@ async def get_status_alias():
 async def voice_greeting():
     """Greeting audio/text endpoint for voice mode."""
     return {"message": "Welcome to VERAXIS AI. What research topic would you like to explore?"}
+
+
+class KeyActionRequest(BaseModel):
+    key: str
+
+
+@app.get("/api/keys")
+async def get_keys_endpoint():
+    """Returns safe key telemetry without exposing raw secret key values."""
+    telemetry = key_manager.get_status_telemetry()
+    return {
+        "status": "operational",
+        "server_managed": True,
+        "server_ready": len(key_manager.groq_keys) > 0,
+        "total_keys": telemetry["total_keys"],
+        "active_keys": telemetry["active_keys"],
+        "cooling_down": telemetry["cooling_down"],
+        "primary_model": key_manager.primary_model,
+        "fast_model": key_manager.fast_model,
+        "gemini_available": bool(key_manager.gemini_key)
+    }
+
+
+@app.post("/api/keys/add")
+async def add_key_endpoint(req: KeyActionRequest):
+    """Add a new Groq key to the active pool (max 5 keys)."""
+    success, message = key_manager.add_key(req.key)
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+    return {"status": "success", "message": message, "keys": key_manager.get_keys_info()}
+
+
+@app.post("/api/keys/remove")
+@app.delete("/api/keys/remove")
+async def remove_key_endpoint(req: KeyActionRequest):
+    """Remove a key from the active pool."""
+    success, message = key_manager.remove_key(req.key)
+    if not success:
+        raise HTTPException(status_code=400, detail=message)
+    return {"status": "success", "message": message, "keys": key_manager.get_keys_info()}
+
+
+class ServiceKeyRequest(BaseModel):
+    service: str
+    key: str
+
+
+@app.post("/api/keys/service")
+async def set_service_key_endpoint(req: ServiceKeyRequest):
+    """Set or remove an auxiliary service key."""
+    clean_key = req.key.strip()
+    svc = req.service.strip().lower()
+    if svc == "gemini":
+        key_manager.gemini_key = clean_key
+    success = set_service_key(svc, clean_key)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to persist service key.")
+    return {"status": "success", "service": svc}
+
+
+@app.get("/api/keys/services")
+async def get_service_keys_endpoint():
+    """Returns safe masked status of all research service keys."""
+    services = ["groq", "gemini", "tavily", "semantic_scholar", "exa", "serper", "jina"]
+    result = {}
+    for svc in services:
+        if svc == "groq":
+            keys = key_manager.groq_keys
+        elif svc == "gemini":
+            keys = [key_manager.gemini_key] if key_manager.gemini_key else []
+        else:
+            keys = get_service_keys(svc)
+        active = bool(keys and len(keys) > 0 and keys[0])
+        masked = ""
+        if active and keys[0]:
+            k = keys[0]
+            masked = f"{k[:4]}••••{k[-4:]}" if len(k) > 10 else "••••••••"
+        result[svc] = {
+            "configured": active,
+            "count": len(keys),
+            "masked": masked
+        }
+    return result
 
 
 @app.get("/keys/list")
@@ -312,10 +432,104 @@ RESEARCH_TOPICS_POOL = [
 ]
 
 
+DYNAMIC_RESEARCH_PILLS_POOL = [
+    {
+        "tag": "Energy",
+        "label": "Solid-State Batteries 2028",
+        "query": "Commercial viability of solid-state EV batteries by 2028 with ceramic electrolyte benchmarks"
+    },
+    {
+        "tag": "Genomics",
+        "label": "CRISPR-Cas9 Base Editing",
+        "query": "Clinical trial breakthroughs in CRISPR-Cas9 in vivo base editing for hematological disorders and viral vectors"
+    },
+    {
+        "tag": "Quantum",
+        "label": "Post-Quantum Cryptography",
+        "query": "NIST Post-Quantum Cryptography standards: lattice-based Kyber and Dilithium implementation audits"
+    },
+    {
+        "tag": "Physics",
+        "label": "Commercial Fusion Scaling",
+        "query": "Commercial nuclear fusion net-energy Q-factor milestones: SPARC and ITER high-temperature superconductor magnets"
+    },
+    {
+        "tag": "Photovoltaics",
+        "label": "Perovskite Tandem Cells",
+        "query": "Silicon-perovskite tandem photovoltaic degradation mechanisms under accelerated damp heat testing"
+    },
+    {
+        "tag": "Neurotech",
+        "label": "Neural Lace Decoding",
+        "query": "High-density neural lace and intracortical BCI decoding bandwidth for motor restoration"
+    },
+    {
+        "tag": "Semiconductors",
+        "label": "2nm GAAFET Nanosheets",
+        "query": "Sub-2nm Gate-All-Around nanosheet transistor parasitic capacitance and manufacturing yield"
+    },
+    {
+        "tag": "AI Hardware",
+        "label": "Photonic Tensor Processors",
+        "query": "Silicon photonic tensor processors versus GPU cluster throughput in large-scale inference"
+    }
+]
+
+
 @app.get("/api/suggestions")
 async def get_suggestions():
-    """Returns exactly 2 randomized cutting-edge empirical research topics for dynamic UI pills."""
-    return random.sample(RESEARCH_TOPICS_POOL, 2)
+    """Returns randomized cutting-edge empirical research topics for UI pills."""
+    return random.sample(DYNAMIC_RESEARCH_PILLS_POOL, 2)
+
+
+@app.get("/api/dynamic-pills")
+async def get_dynamic_pills_endpoint():
+    """
+    Dynamically generates 4 fresh, cutting-edge empirical research pills using AI,
+    with zero-latency fallback to verified topics.
+    """
+    try:
+        from backend.router import get_groq_client
+        client = get_groq_client()
+        system_prompt = (
+            "You are an elite scientific research director. Generate exactly 4 diverse, cutting-edge "
+            "empirical research prompts for world-class researchers. "
+            "Choose 4 distinct categories (e.g. Energy, Quantum, Genomics, Fusion, Semiconductors, Photonics, Aerospace). "
+            "Return ONLY a valid JSON array of 4 objects with keys: "
+            "'tag' (1-2 words domain), 'label' (3-5 words topic), 'query' (1 sentence, 15-25 words). "
+            "No markdown, no code block backticks, no conversational text."
+        )
+        res = client.chat.completions.create(
+            model=key_manager.fast_model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": "Generate 4 fresh cutting-edge research directive pills."}
+            ],
+            temperature=0.7,
+            max_tokens=300
+        )
+        raw_text = res.choices[0].message.content.strip()
+        if raw_text.startswith("```"):
+            raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
+            raw_text = re.sub(r"\s*```$", "", raw_text)
+        pills = json.loads(raw_text)
+        if isinstance(pills, list) and len(pills) >= 4:
+            valid_pills = []
+            for p in pills[:4]:
+                if isinstance(p, dict) and "tag" in p and "label" in p and "query" in p:
+                    valid_pills.append({
+                        "tag": str(p["tag"]).strip()[:16],
+                        "label": str(p["label"]).strip()[:42],
+                        "query": str(p["query"]).strip()[:220]
+                    })
+            if len(valid_pills) == 4:
+                return {"pills": valid_pills, "source": "ai_dynamic"}
+    except Exception as e:
+        print(f"[DynamicPills] AI generation fallback: {e}")
+
+    # Fallback to 4 randomized curated topics
+    selected = random.sample(DYNAMIC_RESEARCH_PILLS_POOL, 4)
+    return {"pills": selected, "source": "curated_pool"}
 
 
 @app.post("/api/classify")
@@ -372,7 +586,7 @@ async def generate_title_endpoint(req: TitleRequest):
             temperature=0.1,
             max_tokens=20
         )
-        raw = response.choices[0].message.content.strip().strip('"\'')
+        raw = strip_think_tags(response.choices[0].message.content or "").strip().strip('"\'')
         cleaned = re.sub(r'[^\w\s-]', '', raw).strip()
         words = cleaned.split()
         if len(words) > 4:
@@ -385,7 +599,7 @@ async def generate_title_endpoint(req: TitleRequest):
 @app.post("/api/enhance")
 async def enhance_query_endpoint(req: EnhanceRequest):
     """
-    Enhance raw user prompt into an authoritative, deeply structured scientific research inquiry.
+    Rewrites the user's draft into ONE clear, easy-to-understand, specific question (12-25 words).
     """
     raw_query = req.query.strip()
     if not raw_query:
@@ -395,30 +609,32 @@ async def enhance_query_endpoint(req: EnhanceRequest):
         from backend.router import get_groq_client
         client = get_groq_client()
         system_instruction = (
-            "You are a scientific research prompt engineer. Rephrase and expand the inquiry "
-            "into an authoritative, deeply structured scientific research inquiry of 1 to 2 complete sentences "
-            "with precise technical and domain terminology. End with a complete sentence. "
-            "Output ONLY the plain text question, without quotes or markdown bold."
+            "Rewrite the user's short idea into ONE clear, specific question in simple everyday English (12 to 25 words). "
+            "Make it easy for a 10th-grade student to read—no heavy jargon or buzzwords. "
+            "Output ONLY the single question. Do not include quotes, titles, or bullets."
         )
         response = client.chat.completions.create(
-            model=key_manager.primary_model,
+            model=key_manager.fast_model,
             messages=[
                 {"role": "system", "content": system_instruction},
                 {"role": "user", "content": raw_query}
             ],
-            temperature=0.3,
-            max_tokens=300
+            temperature=0.25,
+            max_tokens=120
         )
-        raw_enhanced = response.choices[0].message.content or ""
-        # Sanitize unicode dashes, quotes, and markdown bold markers
+        raw_enhanced = strip_think_tags(response.choices[0].message.content or "")
         cleaned = raw_enhanced.strip().strip('"\'').strip('*').strip()
         cleaned = cleaned.replace('\u2011', '-').replace('\u2013', '-').replace('\u2014', '-')
         cleaned = re.sub(r'^\*\*|\*\*$', '', cleaned).strip()
+        if "\n" in cleaned:
+            lines = [l.strip() for l in cleaned.split("\n") if l.strip()]
+            cleaned = lines[0] if lines else raw_query
         return {
             "original": raw_query,
-            "enhanced_query": cleaned or raw_query
+            "enhanced_query": cleaned if len(cleaned) >= 5 else raw_query
         }
     except Exception as e:
+        print(f"[Enhance] Exception: {e}")
         return {
             "original": raw_query,
             "enhanced_query": raw_query
@@ -432,212 +648,513 @@ class ThinkingStepsRequest(BaseModel):
 @app.post("/api/thinking-steps")
 async def get_thinking_steps(req: ThinkingStepsRequest):
     """
-    Generates 6-8 real-time, topic-tailored CrewAI multi-agent research steps.
+    Generates 6 clear, plain-language research steps tailored to the user's question.
     """
     user_query = req.query.strip()
     if not user_query:
-        user_query = "Scientific Research Directive"
+        user_query = "Research Question"
 
     fallback_steps = [
-        {"agent": "Lead Analyst", "step": f"Deconstructing inquiry into academic taxonomy: '{user_query[:50]}'"},
-        {"agent": "arXiv Engine", "step": "Querying arXiv REST gateway for peer-reviewed preprints and abstracts"},
-        {"agent": "Lead Analyst", "step": "Extracting empirical mechanisms, benchmark figures, and mathematical formulations"},
-        {"agent": "Forensic Auditor", "step": "Cross-verifying claims against replication trials & methodology boundaries"},
-        {"agent": "Forensic Auditor", "step": "Auditing unit economics, commercial viability, and technology readiness levels"},
-        {"agent": "Dossier Director", "step": "Structuring multi-perspective consensus matrix & LaTeX tabular formatting"},
-        {"agent": "ReportLab Engine", "step": "Compiling vector typography and generating institutional publication PDF"},
+        {"agent": "Planner", "step": f"Break down the main question: '{user_query[:48]}'"},
+        {"agent": "Searcher", "step": "Check Wikipedia, science papers, and trusted web articles"},
+        {"agent": "Fact-Checker", "step": "Verify numbers, real examples, and accuracy of claims"},
+        {"agent": "Fact-Checker", "step": "Compare what works well vs. practical limits"},
+        {"agent": "Simple Writer", "step": "Write a clear summary with comparison table"},
+        {"agent": "PDF Maker", "step": "Format clean report pages and export PDF"},
     ]
 
     try:
         from backend.router import get_groq_client
         client = get_groq_client()
         system_prompt = (
-            "You are the CrewAI Workflow Orchestrator for VERAXIS AI. "
-            "Given a user query, output EXACTLY 7 concise, highly specific multi-agent steps "
-            "tailored to this exact subject. "
-            "Available Agents: 'Lead Analyst', 'arXiv Engine', 'Forensic Auditor', 'Dossier Director', 'ReportLab Engine'. "
-            "Format MUST be pure valid JSON array of objects: [{\"agent\": \"...\", \"step\": \"...\"}]. "
-            "No markdown, no backticks, no filler."
+            "Create EXACTLY 6 short, clear research steps for this topic in simple everyday English (10th-grade clarity). "
+            "Use Agents: 'Planner', 'Searcher', 'Fact-Checker', 'Simple Writer', 'PDF Maker'. "
+            "Output ONLY valid JSON array: [{\"agent\": \"...\", \"step\": \"...\"}]. No markdown or extra words."
         )
         res = client.chat.completions.create(
             model=key_manager.fast_model,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Query: {user_query}"}
+                {"role": "user", "content": f"Question: {user_query}"}
             ],
             temperature=0.2,
-            max_tokens=450
+            max_tokens=360
         )
-        raw_text = res.choices[0].message.content.strip()
-        if raw_text.startswith("```"):
-            raw_text = re.sub(r"^```(?:json)?\s*", "", raw_text)
-            raw_text = re.sub(r"\s*```$", "", raw_text)
-        steps = json.loads(raw_text)
-        if isinstance(steps, list) and len(steps) >= 4:
-            return {"steps": steps[:8]}
+        raw_text = strip_think_tags(res.choices[0].message.content or "")
+        match = re.search(r"\[[\s\S]*\]", raw_text)
+        if match:
+            steps = json.loads(match.group(0))
+            if isinstance(steps, list) and len(steps) >= 4:
+                cleaned = [
+                    {
+                        "agent": str(s.get("agent", "Searcher")).strip(),
+                        "step": str(s.get("step", "")).strip(),
+                    }
+                    for s in steps[:6]
+                    if isinstance(s, dict) and s.get("step")
+                ]
+                if len(cleaned) >= 4:
+                    return {"steps": cleaned}
     except Exception as e:
-        pass
+        print(f"[ThinkingSteps] AI step generation fallback: {e}")
 
     return {"steps": fallback_steps}
 
 
 
 # ============================================================================
-# Chat & Research Orchestrator Endpoint
+# Chat & Research Orchestrator Endpoints (Sync + Real-Time SSE Streaming)
 # ============================================================================
+
+def _sanitize_attachments(attachments: List[Dict[str, str]]) -> str:
+    """Validates and formats user-attached text/document excerpts safely."""
+    if not attachments:
+        return ""
+    blocks = []
+    remaining = 12000
+    for item in attachments[:5]:
+        if not isinstance(item, dict):
+            continue
+        name = os.path.basename(str(item.get("name", "attachment.txt")))[:80]
+        raw = str(item.get("content", "")).replace("\x00", "").strip()
+        if not raw:
+            continue
+        snippet = raw[:min(4000, remaining)]
+        remaining -= len(snippet)
+        blocks.append(f"[Attached Document: {name}]\n{snippet}")
+        if remaining <= 0:
+            break
+    return "\n\n".join(blocks)
+
+
+def _sanitize_dossier_integrity(text: str) -> str:
+    """Ensure mathematical equations, code fences, links, and trailing sentences close cleanly."""
+    if not text:
+        return ""
+    t = strip_think_tags(text)
+    # Heal fragmented markdown links with spaces or newlines: [Title] (url) -> [Title](url)
+    t = re.sub(r'\[([^\]]+)\]\s*\n?\s*\((https?://[^\s)]+)\)', r'[\1](\2)', t)
+    if t.count("\\[") > t.count("\\]"):
+        t += "\n\\]"
+    if t.count("$$") % 2 != 0:
+        t += "\n$$"
+    if t.count("```") % 2 != 0:
+        t += "\n```"
+    if t.count("**") % 2 != 0:
+        t += "**"
+    if t and t[-1] not in ('.', '!', '?', '|', '`', '}', ']'):
+        last_punct = max(t.rfind('. '), t.rfind('.\n'), t.rfind('!\n'), t.rfind('?\n'))
+        if last_punct > len(t) - 180:
+            t = t[:last_punct + 1]
+        else:
+            t += "."
+    return t
+
+
+def _execute_stage_call(system_prompt: str, user_prompt: str, max_tokens: int = 1500, override_key: Optional[str] = None) -> str:
+    """Executes an isolated synthesis stage with automated key rotation and failover, or user override key."""
+    from backend.router import get_groq_client
+    max_retries = 1 if override_key else min(3, len(key_manager.groq_keys) or 1)
+    for _ in range(max_retries):
+        c = None
+        try:
+            c = get_groq_client(override_key=override_key)
+            r = c.chat.completions.create(
+                model=key_manager.primary_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=max_tokens,
+                temperature=0.2
+            )
+            content = strip_think_tags(r.choices[0].message.content or "")
+            if content:
+                return content
+        except Exception as err:
+            print(f"[StageCall] Failover triggered: {err}")
+            try:
+                if c is not None and hasattr(c, "api_key") and c.api_key:
+                    key_manager.mark_rate_limited(c.api_key)
+            except Exception as mark_err:
+                print(f"[StageCall] Key mark error: {mark_err}")
+            time.sleep(0.3)
+    return ""
+
+
+def _run_chat_pipeline(req: ChatRequest, emit: Optional[Callable[[Dict[str, Any]], None]] = None) -> Dict[str, Any]:
+    """Shared dual-route execution engine with optional real-time SSE callback."""
+    user_query = req.query.strip()
+    if not user_query:
+        raise ValueError("Query cannot be empty.")
+
+    def notify(payload: Dict[str, Any]) -> None:
+        if emit is not None:
+            emit(payload)
+
+    attachment_context = _sanitize_attachments(req.attachments)
+
+    # 1. High-Precision Contextual Disambiguation & Rolling Memory Retrieval
+    session_id = getattr(req, "session_id", None)
+    rolling_memory = getattr(req, "rolling_summary", None) or get_stored_session_summary(session_id)
+
+    notify({"event": "status", "phase": "classify", "label": "Contextualizing query & classifying intent...", "progress": 0.1})
+
+    is_academic_mode = (
+        getattr(req, "research_mode", False)
+        or req.force_research
+        or req.mode in ("deep", "academic")
+        or user_query.lower().startswith(("/research", "/paper"))
+    )
+
+    if user_query.lower().startswith(("/research", "/paper")):
+        user_query = re.sub(r"^/(research|paper)\s*", "", user_query, flags=re.IGNORECASE).strip()
+        force_research_flag = True
+    else:
+        force_research_flag = is_academic_mode
+
+    # Run contextual disambiguation & intent classification using rolling memory!
+    classification = disambiguate_and_classify_query(
+        query=user_query,
+        rolling_summary=rolling_memory,
+        recent_history=req.history,
+        force_research=force_research_flag,
+        override_key=req.user_groq_key,
+    )
+
+    intent = classification.get("intent", "GENERAL_CHAT")
+    if req.mode == "fast":
+        intent = "GENERAL_CHAT"
+    elif req.mode in ("deep", "academic") or force_research_flag:
+        intent = "DEEP_RESEARCH"
+
+    standalone_query = classification.get("standalone_query", user_query)
+    search_keywords = req.search_keywords or classification.get("search_keywords", "")
+    display_topic = classification.get("display_topic", " ".join(user_query.split()[:5]))
+
+    # BRANCH A: CASUAL / QUICK ANSWER (Live Token-by-Token Streaming + Rolling Memory + Epistemic Humility)
+    if intent == "GENERAL_CHAT":
+        notify({"event": "status", "phase": "fast_chat", "label": "Synthesizing conversational response...", "progress": 0.45})
+        prompt_with_files = f"{attachment_context}\n\nUser Question: {standalone_query}" if attachment_context else standalone_query
+
+        # Inject rolling memory and epistemic humility into chat messages
+        chat_context = f"\n[ROLLING CONVERSATION CONTEXT]\n{rolling_memory}\n" if rolling_memory else ""
+        system_with_memory = f"{FAST_CHAT_SYSTEM_PROMPT}{chat_context}{EPISTEMIC_HUMILITY_DIRECTIVE}"
+
+        clean_history = []
+        for m in req.history[-8:]:
+            if isinstance(m, dict) and "role" in m and "content" in m and isinstance(m["content"], str):
+                role = "assistant" if m["role"] == "bot" else m["role"]
+                if role in ("user", "assistant"):
+                    clean_history.append({"role": role, "content": m["content"][:2500]})
+
+        dialogue = [{"role": "system", "content": system_with_memory}] + clean_history + [{"role": "user", "content": prompt_with_files}]
+
+        if emit is not None:
+            parts: List[str] = []
+            for token in stream_groq_tokens(
+                dialogue,
+                model=key_manager.fast_model,
+                temperature=0.3,
+                max_tokens=850,
+                override_key=req.user_groq_key,
+            ):
+                parts.append(token)
+                notify({"event": "delta", "role": "chat", "delta": token})
+            answer = strip_think_tags("".join(parts))
+        else:
+            client = get_groq_client(override_key=req.user_groq_key)
+            resp = client.chat.completions.create(
+                model=key_manager.fast_model,
+                messages=dialogue,
+                temperature=0.3,
+                max_tokens=850,
+            )
+            answer = strip_think_tags(resp.choices[0].message.content or "")
+
+        # Update progressive rolling memory after turn
+        updated_memory = update_rolling_memory(
+            previous_summary=rolling_memory,
+            user_query=user_query,
+            assistant_response=answer,
+            sources=None,
+            session_id=session_id,
+            override_key=req.user_groq_key,
+        )
+
+        return {
+            "type": "chat",
+            "content": answer,
+            "rolling_summary": updated_memory,
+            "rewritten_query": standalone_query,
+        }
+
+    # BRANCH B: DEEP RESEARCH (1. Contextual Topic -> 2. Source Discovery -> 3. Fact Check & Contradiction Audit -> 4. Live Streaming Grounded Report -> 5. PDF)
+    notify({"event": "status", "phase": "rephrase", "label": "Contextualizing academic inquiry & selecting repository keywords...", "progress": 0.18})
+    enhanced_directive = req.enhanced_query or standalone_query
+    search_phrase = " ".join((search_keywords or display_topic).split()[:6])
+
+    # Step 2: Multi-Source Discovery across 8 Scientific & Web Engines
+    notify({"event": "status", "phase": "discovery", "label": "Querying Semantic Scholar, OpenAlex, arXiv & Web...", "progress": 0.34})
+    trace_stats: Dict[str, Any] = {}
+    try:
+        from backend.research_engine import execute_multi_source_discovery
+        discovery = execute_multi_source_discovery(search_phrase or user_query)
+        sources = discovery.get("sources", [])
+        sources_context = discovery.get("evidence_context", "")
+        filtered_papers = discovery.get("filtered_papers", [])
+        trace_stats = discovery.get("trace_stats", {})
+    except Exception as disc_err:
+        print(f"[ResearchEngine] Discovery fallback: {disc_err}")
+        sources = []
+        sources_context = ""
+        filtered_papers = []
+        trace_stats = {}
+
+    if len(sources) < 2:
+        sources.extend([
+            {"title": f"IEEE Index: {display_topic}", "url": "https://ieeexplore.ieee.org", "badge": "IEEE", "authors": "IEEE", "year": "2024", "venue": "IEEE Xplore"},
+            {"title": f"Nature Research: {display_topic}", "url": "https://www.nature.com", "badge": "Nature", "authors": "Nature", "year": "2024", "venue": "Nature"}
+        ])
+        if not sources_context:
+            sources_context = "\n".join([f"- {s['title']} ({s['url']})" for s in sources])
+
+    if attachment_context:
+        sources_context = f"{sources_context}\n\nUser Attached Notes:\n{attachment_context}"
+
+    notify({"event": "sources", "topic": display_topic, "sources": sources})
+
+    # Step 3: Fact-Checker & Contradiction Audit (ZERNEXA ClaimVerifier)
+    notify({"event": "status", "phase": "auditor", "agent": "Fact-Checker", "label": f"Auditing facts & contradictions across {len(sources)} sources...", "progress": 0.54})
+    contradiction_warning = ""
+    try:
+        from backend.claim_verifier import ClaimVerifier
+        verifier = ClaimVerifier(key_manager=key_manager)
+        _, contradictions = verifier.audit_evidence_claims(sources_context, enhanced_directive)
+        if contradictions:
+            conflict_lines = [
+                f"- [CONTRADICTION DETECTED] {c.get('claim')}: In reality, {c.get('conflicting_source') or c.get('reasoning')}"
+                for c in contradictions
+            ]
+            contradiction_warning = "\n\nCRITICAL CONTRADICTIONS DETECTED IN EVIDENCE:\n" + "\n".join(conflict_lines)
+    except Exception as cv_err:
+        print(f"[ClaimVerifier] Non-blocking notice: {cv_err}")
+
+    numbered_sources = "\n".join(
+        f"[{i}] {s['title']} ({s.get('year','n.d.')}), {s['url']}"
+        for i, s in enumerate(sources, 1)
+    )
+
+    audit_sys = (
+        "You are the Fact-Checker for MULTIINTEL.\n"
+        "Read the retrieved sources and pull out ONLY true facts, numbers, dates, and limits.\n"
+        "CRITICAL RULE: Tag EVERY factual bullet point with its source number from the numbered sources list (e.g. [1] or [2][4]). A claim no source supports is left out.\n"
+        "Output 5 to 8 short bullet points:\n"
+        "- What is proven and how it works, tagged [n]\n"
+        "- Exact numbers, benchmarks, dates, or sample sizes found, tagged [n]\n"
+        "- Known challenges, costs, or unproven limits, tagged [n]"
+    )
+    audit_user = f"Question: '{enhanced_directive}'\n\nSources:\n{numbered_sources}\n\nEvidence Details:\n{sources_context[:4500]}{contradiction_warning}"
+    verified_brief = _execute_stage_call(audit_sys, audit_user, max_tokens=650)
+    if contradiction_warning and contradiction_warning not in verified_brief:
+        verified_brief = f"{verified_brief}\n{contradiction_warning}"
+
+    # Step 4: Live Token-by-Token Writer (Academic Literature Review OR Simple Clear Report)
+    notify({"event": "status", "phase": "director", "agent": "Literature Director" if is_academic_mode else "Simple Writer", "label": "Synthesizing grounded research dossier...", "progress": 0.74})
+    verified_urls_text = "\n".join([f"- [{s['title']}]({s['url']})" for s in sources[:8]])
+    history_note = ""
+    if req.history:
+        last_turns = "\n".join([f"{m.get('role', 'user')}: {str(m.get('content', ''))[:300]}" for m in req.history[-4:]])
+        history_note = f"\nRecent Chat Context:\n{last_turns}\n"
+
+    if is_academic_mode:
+        writer_sys = (
+            "You are VERAXIS, an authoritative scientific intelligence engine.\n"
+            "Synthesize an authoritative, highly scannable, and deeply rigorous research dossier using ONLY the numbered sources provided.\n\n"
+            "REQUIRED DOSSIER STRUCTURE:\n"
+            "1. # Executive Summary & Core Finding\n"
+            "The very first sentence MUST directly answer the question with exact numbers, metrics, or thresholds from the sources, tagged with [n]. Follow with 2-3 clear sentences synthesizing the scientific consensus.\n\n"
+            "2. ## Comparative Benchmarks & Empirical Matrix\n"
+            "Always include a clean Markdown comparison table summarizing findings across studies:\n"
+            "| Architecture / System | Benchmark Metric / Value | Conditions / Noise Model | Sample / Year | Source |\n"
+            "Fill with 3-5 real rows grounded in the sources.\n\n"
+            "3. ## Key Mechanisms & Theoretical Architecture\n"
+            "2-3 structured paragraphs explaining the underlying mechanism or principles. Bold key defined terms. Every factual claim must end with its source tag like [1] or [2][5].\n\n"
+            "4. ## Engineering Bottlenecks & Failure Modes\n"
+            "Detail specific physical limits, error margins, fabrication faults, or cost constraints proven in the literature, tagged with [n].\n\n"
+            "STRICT RULES:\n"
+            "- Mathematical formulas and variables MUST use standard LaTeX: inline formulas inside $...$ (e.g. $p_{th} \\approx 1.0\\%$, $P_L \\propto (p/p_{th})^{(d+1)/2}$) and block formulas inside $$...$$. Never write raw pseudocode math like p_th or ^((d+1)/2).\n"
+            "- Every factual claim must end with its source number like [3] or [1][4]. Always put a space before citation tags.\n"
+            "- Exact numbers, dates, and names only. Do not round or generalize.\n"
+            "- Do NOT write a bibliography or references section (the system compiles that separately).\n"
+            "- Zero generic fluff or conversational intros.\n"
+            "- STRICT GROUNDING: Never hallucinate or assume unverified claims. All benchmarks, formulas, and mechanisms must be directly derived from the retrieved papers below."
+            f"{EPISTEMIC_HUMILITY_DIRECTIVE}"
+        )
+
+        writer_user = (
+            f"Research Question: {user_query}\n"
+            f"Scope / Goal: {enhanced_directive}\n"
+            f"{history_note}\n\n"
+            f"=== RETRIEVED ACADEMIC PAPERS, ABSTRACTS & EVIDENCE ===\n"
+            f"{sources_context[:6500]}\n\n"
+            f"=== FACT-CHECKER VERIFIED AUDIT & METRICS ===\n"
+            f"{verified_brief}\n\n"
+            f"=== NUMBERED SOURCES ===\n"
+            f"{numbered_sources}\n\n"
+            "Synthesize the complete, highly structured research dossier now, strictly grounded in the retrieved papers."
+        )
+    else:
+        writer_sys = (
+            "You are MULTIINTEL Clear Writer.\n"
+            "GOAL: Explain the answer so clearly and simply that a 10th-class student understands every sentence immediately, while keeping every fact accurate.\n\n"
+            "STRICT WRITING RULES:\n"
+            "1. Use short sentences (usually under 18 words) and everyday words.\n"
+            "2. Whenever you use a technical term, explain it in plain words in parentheses right next to it.\n"
+            "3. Never pad paragraphs with robotic buzzwords like 'empirical scope', 'synergistically', 'breakthrough horizon', or 'paradigm shift'.\n"
+            "4. Write ONLY true, verified information grounded in the verified notes and sources.\n\n"
+            "EXACT STRUCTURE TO FOLLOW:\n"
+            "# Simple Answer & Big Picture\n"
+            "(3-4 clear sentences directly answering the question, plus 1 easy everyday comparison/analogy.)\n\n"
+            "## How It Works (Step-by-Step)\n"
+            "(4-6 simple bullets explaining the steps cleanly. Include one short formula ONLY if truly useful, and explain each letter right under it.)\n\n"
+            "## Key Numbers & Comparison\n"
+            "(One clean 4-column Markdown table: | What Was Checked | Real Number or Fact | How Sure Are We? | Simple Meaning | with 3-4 rows.)\n\n"
+            "## What Works Now vs. Challenges Ahead\n"
+            "(Clear bullets covering real benefits today, practical problems like cost/safety, and realistic timing.)\n\n"
+            "## Sources Used\n"
+            "(List each source as a single-line Markdown bullet: `- [Exact Title](https://exact-url)` with NO spaces or line breaks between brackets and parentheses.)"
+        )
+        writer_user = (
+            f"User Question: {user_query}\n"
+            f"Focused Goal: {enhanced_directive}\n"
+            f"{history_note}\n"
+            f"Retrieved Papers & Evidence Details:\n{sources_context[:4500]}\n\n"
+            f"Verified Fact Notes:\n{verified_brief}\n\n"
+            f"Verified Source Links (use exact URLs):\n{verified_urls_text}\n\n"
+            "Write the complete, clear report now, strictly based on the retrieved papers."
+        )
+
+    writer_messages = [
+        {"role": "system", "content": writer_sys},
+        {"role": "user", "content": writer_user},
+    ]
+
+    if emit is not None:
+        report_tokens: List[str] = []
+        for token in stream_groq_tokens(
+            writer_messages,
+            model=key_manager.primary_model,
+            temperature=0.25,
+            max_tokens=2000,
+            override_key=req.user_groq_key,
+        ):
+            report_tokens.append(token)
+            notify({"event": "delta", "role": "research", "delta": token})
+        dossier_text = _sanitize_dossier_integrity("".join(report_tokens))
+    else:
+        raw_doc = _execute_stage_call(writer_sys, writer_user, max_tokens=2000, override_key=req.user_groq_key)
+        dossier_text = _sanitize_dossier_integrity(raw_doc)
+
+    # Step 5: Compile ReportLab PDF
+    notify({"event": "status", "phase": "pdf", "label": "Creating clean PDF report...", "progress": 0.94})
+    file_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    safe_topic_slug = sanitize_filename(display_topic, max_length=24)
+    pdf_filename = f"VERAXIS_{safe_topic_slug}_{file_stamp}.pdf"
+    pdf_path = os.path.join(PDF_DIR, pdf_filename)
+    create_pdf_dossier(display_topic, dossier_text, output_path=pdf_path)
+
+    cited_ids = {int(n) for n in re.findall(r"\[(\d+)\]", dossier_text)}
+    trace = {
+        "queried": trace_stats.get("queried", ["arxiv", "semantic_scholar", "openalex", "europe_pmc", "web"]),
+        "fetched": trace_stats.get("fetched", len(sources)),
+        "after_dedup": trace_stats.get("after_dedup", len(sources)),
+        "after_filter": trace_stats.get("after_filter", len(sources)),
+        "cited": len(cited_ids),
+    }
+    notify({"event": "trace", "trace": trace})
+
+    # Update progressive rolling memory after research dossier
+    updated_memory = update_rolling_memory(
+        previous_summary=rolling_memory,
+        user_query=user_query,
+        assistant_response=dossier_text[:2000],
+        sources=sources,
+        session_id=session_id,
+        override_key=req.user_groq_key,
+    )
+
+    return {
+        "type": "research",
+        "topic": display_topic,
+        "sources": sources,
+        "content": dossier_text,
+        "pdf_filename": pdf_filename,
+        "has_pdf": os.path.exists(pdf_path),
+        "trace": trace,
+        "rolling_summary": updated_memory,
+        "rewritten_query": standalone_query,
+    }
+
 
 @app.post("/api/chat")
 async def chat_endpoint(req: ChatRequest):
-    """
-    Dual-Route Dispatcher:
-    - GENERAL_CHAT: Instant Groq LPU response (<400ms) with zero tool overhead.
-    - DEEP_RESEARCH: 3-Tier Multi-Agent Crew with ArXiv/Web sources and ReportLab PDF.
-    """
-    user_query = req.query.strip()
-    if not user_query:
+    """Standard JSON endpoint for fast chat and complete 3-tier deep research dossiers."""
+    if not req.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty.")
-
-    # 1. High-Precision Intent Classification with explicit override
-    if req.force_research or req.mode == "deep":
-        intent = "DEEP_RESEARCH"
-        extracted_topic = user_query
-    elif req.mode == "fast":
-        intent = "GENERAL_CHAT"
-        extracted_topic = user_query
-    else:
-        intent_data = classify_query_intent(user_query)
-        intent = intent_data.get("intent", "DEEP_RESEARCH")
-        extracted_topic = intent_data.get("extracted_topic", user_query)
-
-    # 2. Query Rephrasing & Academic Taxonomy Expansion for Deep Research
-    enhanced_directive = req.enhanced_query or user_query
-    if intent == "DEEP_RESEARCH" and not req.enhanced_query:
-        try:
-            from backend.router import rephrase_query_for_research
-            rephrased = rephrase_query_for_research(user_query)
-            enhanced_directive = rephrased.get("enhanced_query", user_query)
-            if not req.search_keywords and "search_keywords" in rephrased:
-                req.search_keywords = rephrased["search_keywords"]
-        except Exception:
-            enhanced_directive = user_query
-
-        if req.search_keywords:
-            extracted_topic = f"{user_query} {req.search_keywords}"
-        else:
-            try:
-                from backend.router import get_groq_client
-                client = get_groq_client()
-                rephrase_res = client.chat.completions.create(
-                    model=key_manager.fast_model,
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": "Extract 4 to 8 precise academic search keywords from this scientific topic for preprint databases. Output only space-separated keywords."
-                        },
-                        {"role": "user", "content": enhanced_directive}
-                    ],
-                    max_tokens=40,
-                    temperature=0.2
-                )
-                expanded_keywords = rephrase_res.choices[0].message.content.strip()
-                extracted_topic = f"{user_query} {expanded_keywords}"
-            except Exception:
-                extracted_topic = user_query
-
-    # BRANCH A: CASUAL / INSTANT CONVERSATIONAL QUERY
-    if intent == "GENERAL_CHAT":
-        answer = generate_fast_chat_response([{"role": "user", "content": user_query}])
-        return {
-            "type": "chat",
-            "content": answer
-        }
-
-    # BRANCH B: DEEP EMPIRICAL RESEARCH QUERY
     try:
-        # Step 1: Discover Authoritative Sources via Fast ArXiv Client
-        sources: List[Dict[str, str]] = []
-        try:
-            import arxiv
-            client = arxiv.Client(page_size=3, delay_seconds=0.1, num_retries=1)
-            search = arxiv.Search(query=extracted_topic, max_results=3)
-            for paper in client.results(search):
-                sources.append({
-                    "title": f"ArXiv: {paper.title}",
-                    "url": paper.entry_id
-                })
-        except Exception:
-            pass
-
-        if len(sources) < 2:
-            sources.extend([
-                {"title": f"IEEE / ACM Index: {extracted_topic} State-of-the-Art", "url": "https://ieeexplore.ieee.org"},
-                {"title": f"Nature Research: Empirical Benchmarks on {extracted_topic}", "url": "https://www.nature.com"}
-            ])
-
-        # Step 2: High-Speed Multi-Perspective Research Synthesis via Groq LPU (~4s)
-        from backend.router import get_groq_client
-        client = get_groq_client()
-        
-        system_instruction = (
-            "You are VERAXIS AI Chief Research Director & Forensic Fact-Checker.\n"
-            "You execute an authoritative 3-tier intelligence pipeline:\n"
-            "- Tier 1: Lead Analyst (Empirical breakthroughs, mechanisms, and metrics)\n"
-            "- Tier 2: Forensic Auditor (Audits claims, detects conflicts, assigns 0-100% confidence)\n"
-            "- Tier 3: Dossier Director (Synthesizes publication-grade executive dossier)\n\n"
-            "Generate an exhaustive, publication-grade empirical research dossier in crisp Markdown with:\n"
-            "1. # Executive Summary & Breakthrough Horizon\n"
-            "2. ## Deep Technical Architecture & Physical Mechanisms\n"
-            "3. ## Empirical Verification Matrix (Table with columns: | Empirical Claim | Primary Source / ArXiv | Audit Status ([VERIFIED]/[CONTESTED]) | Confidence % | Key Notes |)\n"
-            "4. ## Commercial Scalability, Unit Economics & Market Feasibility\n"
-            "5. ## Strategic Roadmaps & 2026-2030 Milestones\n"
-            "6. ## Citations & Open Source Verification Indices\n\n"
-            "CRITICAL LATEX & MATHEMATICAL FORMATTING RULES:\n"
-            "- Wrap ALL inline mathematical expressions, Greek variables, and constants in $...$ (e.g., $e$, $\\gamma_{\\text{eff}}$, $\\Omega_{\\text{Li}}$, $D_{\\text{Li}}$, $t$). Never output bare backslash commands in regular prose without enclosing delimiters.\n"
-            "- Wrap ALL standalone equations in \\[ ... \\] or $$ ... $$ on their own lines.\n"
-            "Write with immense technical depth, hard metrics, concrete numbers, and analytical rigor. Zero fluff."
-        )
-
-        sources_context = "\n".join([f"- {s['title']} ({s['url']})" for s in sources])
-
-        user_content = (
-            f"Execute exhaustive autonomous scientific research on the directive: '{enhanced_directive}'.\n\n"
-            f"Identified Primary Academic Sources:\n{sources_context}\n\n"
-            f"Synthesize the complete, authoritative, peer-reviewed caliber research dossier now."
-        )
-
-        res = client.chat.completions.create(
-            model=key_manager.primary_model,
-            messages=[
-                {"role": "system", "content": system_instruction},
-                {"role": "user", "content": user_content}
-            ],
-            max_tokens=2200,
-            temperature=0.2
-        )
-        dossier_text = res.choices[0].message.content.strip()
-
-        # Step 3: Generate Publication-Grade ReportLab 4.x PDF
-        file_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safe_topic_slug = sanitize_filename(extracted_topic, max_length=24)
-        pdf_filename = f"VERAXIS_{safe_topic_slug}_{file_stamp}.pdf"
-        pdf_path = os.path.join(PDF_DIR, pdf_filename)
-        create_pdf_dossier(extracted_topic, dossier_text, output_path=pdf_path)
-
-        return {
-            "type": "research",
-            "topic": extracted_topic,
-            "sources": sources,
-            "content": dossier_text,
-            "pdf_filename": pdf_filename
-        }
-
+        return await asyncio.to_thread(_run_chat_pipeline, req, None)
     except Exception as e:
         import traceback
         traceback.print_exc()
         return {
             "type": "error",
-            "content": f"⚠️ Research pipeline encountered an issue: {str(e)}. Please retry with refined parameters."
+            "content": f"Research pipeline encountered an issue: {str(e)}. Please retry."
         }
+
+
+@app.post("/api/chat/stream")
+async def chat_stream_endpoint(req: ChatRequest):
+    """Server-Sent Events streaming endpoint delivering real-time stage progress, sources, and report sections."""
+    if not req.query.strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty.")
+
+    loop = asyncio.get_running_loop()
+    queue: asyncio.Queue = asyncio.Queue()
+
+    def thread_emit(payload: Dict[str, Any]) -> None:
+        loop.call_soon_threadsafe(queue.put_nowait, payload)
+
+    async def runner() -> None:
+        try:
+            result = await asyncio.to_thread(_run_chat_pipeline, req, thread_emit)
+            thread_emit({"event": "done", "result": result})
+        except Exception as exc:
+            thread_emit({"event": "error", "message": str(exc)})
+        finally:
+            thread_emit({"event": "_eof"})
+
+    async def event_generator():
+        task = asyncio.create_task(runner())
+        try:
+            while True:
+                item = await queue.get()
+                if item.get("event") == "_eof":
+                    break
+                yield f"data: {json.dumps(item)}\n\n"
+        finally:
+            if not task.done():
+                task.cancel()
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @app.get("/api/download-pdf/{filename}")

@@ -10,11 +10,23 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-dropdown-menu": "^2.2.1",
+    "@radix-ui/react-slot": "^1.5.0",
+    "@types/dompurify": "^3.0.5",
+    "@types/prismjs": "^1.26.6",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.4.18",
     "katex": "^0.18.10",
+    "liquid-gl": "^3.0.0",
     "lucide-react": "^1.48.0",
     "marked": "^18.0.14",
+    "motion": "^14.12.0",
+    "prismjs": "^1.30.0",
+    "radix-ui": "^1.8.1",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",

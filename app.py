@@ -34,7 +34,7 @@ st.set_page_config(
 from ui.theme import get_theme_css
 from ui.components import render_hero_header, render_telemetry_pods, render_voice_input_widget
 from ui.sidebar import render_sidebar
-from router import classify_query_intent, generate_fast_chat_response
+from router import classify_query_intent, generate_fast_chat_response, stream_fast_chat_response
 from agents import create_lead_researcher, create_fact_checker, create_dossier_director
 from tasks import create_discovery_task, create_audit_task, create_synthesis_task
 from pdf_generator import create_pdf_dossier
@@ -164,24 +164,28 @@ if active_user_prompt:
     with st.chat_message("user"):
         st.markdown(active_user_prompt)
 
-    # Step A: Intent Classification via Groq LPU
-    with st.spinner("🧠 Analyzing Intent with Groq LPU..."):
-        intent_info = classify_query_intent(active_user_prompt, st.session_state.messages)
-        intent = intent_info.get("intent", "GENERAL_CHAT")
-        extracted_topic = intent_info.get("extracted_topic", active_user_prompt)
+    # Step A: Smart Multi-Signal Intent Classification (zero LLM cost for obvious cases)
+    intent_info = classify_query_intent(active_user_prompt, st.session_state.messages)
+    intent = intent_info.get("intent", "GENERAL_CHAT")
+    extracted_topic = intent_info.get("extracted_topic", active_user_prompt)
+    routed_by = intent_info.get("routed_by", "multi_signal")
+    confidence = intent_info.get("confidence", 0.0)
 
-    # BRANCH 1: CASUAL / INSTANT CONVERSATIONAL QUERY
+    # BRANCH 1: CASUAL / INSTANT CONVERSATIONAL QUERY — live streaming
     if intent == "GENERAL_CHAT" and not offline_mode:
         with st.chat_message("assistant"):
-            st.caption("💬 *Direct Conversational Query (Instant Groq LPU)*")
-            with st.spinner("Thinking..."):
-                reply = generate_fast_chat_response(st.session_state.messages)
-                st.markdown(reply)
-                st.session_state.messages.append({
-                    "role": "assistant",
-                    "type": "chat",
-                    "content": reply
-                })
+            st.caption(f"💬 *Instant Response · {routed_by} · {confidence:.0%} confidence*")
+            placeholder = st.empty()
+            full_reply = ""
+            for token in stream_fast_chat_response(st.session_state.messages):
+                full_reply += token
+                placeholder.markdown(full_reply + "▌")
+            placeholder.markdown(full_reply)
+            st.session_state.messages.append({
+                "role": "assistant",
+                "type": "chat",
+                "content": full_reply,
+            })
 
     # BRANCH 2: DEEP RESEARCH TOPIC (OR OFFLINE VIVA DEMO MODE)
     else:

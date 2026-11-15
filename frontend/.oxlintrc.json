@@ -4,5 +4,12 @@
   "rules": {
     "react/rules-of-hooks": "error",
     "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+  },
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**",
+    "src/components/registry/**",
+    "src/components/ui/**",
+    "src/packages/**"
+  ]
 }

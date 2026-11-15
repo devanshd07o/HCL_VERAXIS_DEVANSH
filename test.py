@@ -30,8 +30,9 @@ from backend.helper import (
     format_duration,
     validate_system_environment
 )
+from unittest.mock import patch
 from backend.config import KeyManager
-from backend.router import classify_query_intent
+from backend.router import ThinkFilterStream, classify_query_intent
 from backend.pdf_generator import create_pdf_dossier
 from fastapi.testclient import TestClient
 from backend.main import app
@@ -128,6 +129,23 @@ class TestIntentClassification(unittest.TestCase):
         self.assertEqual(result.get("intent"), "DEEP_RESEARCH")
         self.assertTrue(len(result.get("extracted_topic", "")) > 0)
 
+    def test_casual_multiword_fallback_stays_general_chat(self):
+        with patch("backend.router.get_groq_client", side_effect=RuntimeError("offline")):
+            result = classify_query_intent("Why does the sky look blue to students?")
+        self.assertEqual(result.get("intent"), "GENERAL_CHAT")
+
+    def test_think_filter_stream_split_chunks(self):
+        stream = ThinkFilterStream()
+        chunks = ["<thi", "nk>secret plan</th", "ink>  Clear ", "answer", " here"]
+        collected = "".join(stream.feed(c) for c in chunks) + stream.flush()
+        self.assertEqual(collected, "Clear answer here")
+        self.assertNotIn("secret", collected)
+
+        mid_stream = ThinkFilterStream()
+        mid_chunks = ["Hello ", "<thi", "nk>hidden</thi", "nk>world"]
+        mid_out = "".join(mid_stream.feed(c) for c in mid_chunks) + mid_stream.flush()
+        self.assertEqual(mid_out, "Hello world")
+
 
 class TestPDFGeneration(unittest.TestCase):
     """Tests Supreme ReportLab 4.x PDF generation engine."""
@@ -205,6 +223,42 @@ class TestFastAPIEndpoints(unittest.TestCase):
     def test_chat_endpoint_empty_query(self):
         response = self.client.post("/api/chat", json={"query": "  "})
         self.assertEqual(response.status_code, 400)
+
+    def test_api_classify_endpoint(self):
+        response = self.client.post("/api/classify", json={"query": "Solid-state battery chemistry 2028"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("intent", data)
+
+    def test_api_rephrase_endpoint(self):
+        response = self.client.post("/api/rephrase", json={"query": "Quantum dot displays"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("enhanced_query", data)
+
+    def test_api_dynamic_pills_endpoint(self):
+        response = self.client.get("/api/dynamic-pills")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("pills", data)
+        self.assertGreaterEqual(len(data["pills"]), 4)
+
+    def test_api_enhance_endpoint(self):
+        response = self.client.post("/api/enhance", json={"query": "fusion energy"})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("enhanced_query", data)
+
+    def test_api_keys_endpoint(self):
+        response = self.client.get("/api/keys")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn("keys", data)
+        self.assertIn("total_keys", data)
+
+    def test_download_pdf_not_found(self):
+        response = self.client.get("/api/download-pdf/non_existent_file.pdf")
+        self.assertEqual(response.status_code, 404)
 
 
 class TestAssetIntegrity(unittest.TestCase):

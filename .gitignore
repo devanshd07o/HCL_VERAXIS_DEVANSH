@@ -6,6 +6,30 @@
 *_keys.txt
 groq_keys.txt
 keys.txt
+assets/groq_keys.json
+assets/service_keys.json
+assets/sessions.json
+assets/tavily_state.json
+ZERNEXA_KEYS_*
+assets/sessions.json
+assets/tavily_state.json
+
+# Ephemeral Test Verification Artifacts & Screenshots
+*.png
+!assets/*.png
+!frontend/dist/assets/**
+!frontend/public/**
+verify_*.py
+frontend/verify_*.py
+test_matrix.py
+test_session.py
+test_research_integration.py
+capture_mobile_verification.py
+frontend/capture_screenshots.py
+frontend/run_observatory_verification.py
+extracted_VaultSettings.tsx
+step_484_*.txt
+scratch/
 
 # Python
 __pycache__/
